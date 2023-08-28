@@ -16,3 +16,12 @@
 [submodule "Source/Firmware/libraries/codal-nrf52"]
 	path = Source/Firmware/libraries/codal-nrf52
 	url = https://github.com/lancaster-university/codal-nrf52
+[submodule "ThirdParty/SDL"]
+	path = ThirdParty/SDL
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "ThirdParty/imgui"]
+	path = ThirdParty/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "ThirdParty/fmt"]
+	path = ThirdParty/fmt
+	url = https://github.com/fmtlib/fmt.git

@@ -16,3 +16,6 @@ pxtapp
 yotta_modules
 yotta_targets
 Doxyfile
+CMakeUserPresets.json
+.direnv
+imgui.ini
