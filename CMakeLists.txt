@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.26)
 
 # Init project
-project(MicroBros LANGUAGES CXX)
+project(MicroBros LANGUAGES C CXX)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Firmware")
+    set(FIRMWARE ON)
+endif()
 
 # Configure C++
 set(CMAKE_CXX_STANDARD 17)

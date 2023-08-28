@@ -27,6 +27,15 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
+        },
+        {
+            "name": "Firmware",
+            "displayName": "Firmware",
+            "inherits": "base",
+            "toolchainFile": "${sourceDir}/Source/Firmware/toolchain.cmake",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Firmware"
+            }
         }
     ]
 }

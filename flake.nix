@@ -36,6 +36,7 @@
             name = "microbros";
             packages = with xorg; [
               cmake
+              gcc-arm-embedded
               libX11
               libICE
               libXi

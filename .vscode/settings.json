@@ -1,7 +1,6 @@
 {
     "cmake.sourceDirectory": [
-        "${workspaceFolder}",
-        //   "${workspaceFolder}/Source/Firmware"
+        "${workspaceFolder}"
     ],
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
@@ -77,6 +76,7 @@
         "shared_mutex": "cpp",
         "stop_token": "cpp",
         "thread": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "nrf53_erratas.h": "c"
     },
 }

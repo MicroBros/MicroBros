@@ -1,21 +1,3 @@
-[submodule "Source/Firmware/libraries/codal"]
-	path = Source/Firmware/libraries/codal
-	url = https://github.com/lancaster-university/codal.git
-[submodule "Source/Firmware/libraries/codal-bootstrap"]
-	path = Source/Firmware/libraries/codal-bootstrap
-	url = https://github.com/lancaster-university/codal-bootstrap.git
-[submodule "Source/Firmware/libraries/codal-core"]
-	path = Source/Firmware/libraries/codal-core
-	url = https://github.com/lancaster-university/codal-core
-[submodule "Source/Firmware/libraries/codal-microbit-nrf5sdk"]
-	path = Source/Firmware/libraries/codal-microbit-nrf5sdk
-	url = https://github.com/microbit-foundation/codal-microbit-nrf5sdk
-[submodule "Source/Firmware/libraries/codal-microbit-v2"]
-	path = Source/Firmware/libraries/codal-microbit-v2
-	url = https://github.com/lancaster-university/codal-microbit-v2
-[submodule "Source/Firmware/libraries/codal-nrf52"]
-	path = Source/Firmware/libraries/codal-nrf52
-	url = https://github.com/lancaster-university/codal-nrf52
 [submodule "ThirdParty/SDL"]
 	path = ThirdParty/SDL
 	url = https://github.com/libsdl-org/SDL.git
@@ -25,3 +7,6 @@
 [submodule "ThirdParty/fmt"]
 	path = ThirdParty/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "ThirdParty/arduino-nRF5"]
+	path = ThirdParty/arduino-nRF5
+	url = https://github.com/sandeepmistry/arduino-nRF5.git
