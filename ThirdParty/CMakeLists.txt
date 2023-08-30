@@ -7,7 +7,6 @@ if(FIRMWARE)
     file (GLOB SOURCE_FILES
         "arduino-nRF5/cores/nRF5/*.cpp"
         "arduino-nRF5/cores/nRF5/*.c"
-        "arduino-nRF5/cores/nRF5/SDK/components/toolchain/*.c"
     )
 
     set(nRF5-variant BBCmicrobitV2)
@@ -15,6 +14,9 @@ if(FIRMWARE)
     add_library(arduino-nRF5 STATIC
         ${SOURCE_FILES}
         arduino-nRF5/variants/${nRF5-variant}/variant.cpp
+        arduino-nRF5/cores/nRF5/SDK/components/toolchain/system_nrf52.c
+        arduino-nRF5/cores/nRF5/SDK/components/toolchain/system_nrf52833.c
+        arduino-nRF5/cores/nRF5/SDK/components/toolchain/gcc/gcc_startup_nrf52833.S
     )
     target_include_directories(arduino-nRF5 PUBLIC
         arduino-nRF5/cores/nRF5
@@ -23,13 +25,6 @@ if(FIRMWARE)
         arduino-nRF5/cores/nRF5/SDK/components/toolchain
         arduino-nRF5/cores/nRF5/SDK/components/toolchain/CMSIS/Include
         arduino-nRF5/variants/${nRF5-variant}
-    )
-    target_compile_definitions(arduino-nRF5 PUBLIC
-        -DNRF52833_XXAA
-        -DARDUINO=10805
-        -DARDUINO_ARCH_NRF5
-        -DNRF5
-        -DNRF52
     )
     add_library(ThirdParty::arduino-nRF5 ALIAS arduino-nRF5)
 else()

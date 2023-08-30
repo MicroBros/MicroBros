@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 
 # Init project
-project(MicroBros LANGUAGES C CXX)
+project(MicroBros LANGUAGES ASM C CXX)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Firmware")
     set(FIRMWARE ON)
