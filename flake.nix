@@ -37,6 +37,7 @@
             packages = with xorg; [
               cmake
               gcc-arm-embedded
+              (python3.withPackages (ps: with ps; [cffi pyocd]))
               libX11
               libICE
               libXi

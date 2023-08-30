@@ -3,30 +3,66 @@ add_subdirectory(fmt EXCLUDE_FROM_ALL)
 add_library(ThirdParty::fmt ALIAS fmt)
 
 if(FIRMWARE)
-    # arduino-nRF5
-    file (GLOB SOURCE_FILES
-        "arduino-nRF5/cores/nRF5/*.cpp"
-        "arduino-nRF5/cores/nRF5/*.c"
+    include(codal/utils/cmake/toolchains/ARM_GCC/compiler-flags.cmake)
+
+    # codal-core
+    file(GLOB_RECURSE SOURCE_FILES
+        "codal-core/source/*.cpp"
     )
-
-    set(nRF5-variant BBCmicrobitV2)
-
-    add_library(arduino-nRF5 STATIC
+    add_library(codal-core STATIC
         ${SOURCE_FILES}
-        arduino-nRF5/variants/${nRF5-variant}/variant.cpp
-        arduino-nRF5/cores/nRF5/SDK/components/toolchain/system_nrf52.c
-        arduino-nRF5/cores/nRF5/SDK/components/toolchain/system_nrf52833.c
-        arduino-nRF5/cores/nRF5/SDK/components/toolchain/gcc/gcc_startup_nrf52833.S
     )
-    target_include_directories(arduino-nRF5 PUBLIC
-        arduino-nRF5/cores/nRF5
-        arduino-nRF5/cores/nRF5/SDK/components/drivers_nrf/delay
-        arduino-nRF5/cores/nRF5/SDK/components/device
-        arduino-nRF5/cores/nRF5/SDK/components/toolchain
-        arduino-nRF5/cores/nRF5/SDK/components/toolchain/CMSIS/Include
-        arduino-nRF5/variants/${nRF5-variant}
+    target_include_directories(codal-core PUBLIC
+        .
+        codal/utils/cmake/toolchains/ARM_GCC
+        codal-core/inc/core
+        codal-core/inc/driver-models
+        codal-core/inc/drivers
+        codal-core/inc/streams
+        codal-core/inc/types
     )
-    add_library(ThirdParty::arduino-nRF5 ALIAS arduino-nRF5)
+    add_subdirectory(codal-microbit-nrf5sdk)
+
+    # codal-nrf52
+    file(GLOB_RECURSE SOURCE_FILES
+        "codal-nrf52/source/*.cpp"
+    )
+    add_library(codal-nrf52 STATIC
+        ${SOURCE_FILES}
+        codal-nrf52/asm/CortexContextSwitch.s
+        codal-nrf52/nrfx/mdk/system_nrf52833.c
+        codal-nrf52/nrfx/mdk/gcc_startup_nrf52833.S
+    )
+    target_compile_definitions(codal-nrf52 PUBLIC -DNRFX_PRS_ENABLED=0)
+    target_include_directories(codal-nrf52 PUBLIC
+        codal-nrf52/inc
+        codal-nrf52/inc
+        codal-nrf52/inc/cmsis
+        codal-nrf52/nrfx/mdk
+        codal-nrf52/nrfx
+        codal-nrf52/nrfx/templates/
+        codal-nrf52/nrfx/templates/nRF52833
+        codal-nrf52/nrfx/drivers/include
+        codal-nrf52/nrfx/drivers/src
+    )
+    target_link_libraries(codal-nrf52 PUBLIC codal-core codal-microbit-nrf5sdk)
+
+    # codal-microbit-v2
+    file(GLOB_RECURSE SOURCE_FILES
+        "codal-microbit-v2/source/*.cpp"
+        "codal-microbit-v2/model/*.cpp"
+    )
+    add_library(codal-microbit-v2 STATIC
+        ${SOURCE_FILES}
+    )
+    target_include_directories(codal-microbit-v2 PUBLIC
+        codal-microbit-v2/inc
+        codal-microbit-v2/inc/bluetooth
+        codal-microbit-v2/inc/compat
+        codal-microbit-v2/model
+    )
+    target_link_libraries(codal-microbit-v2 PUBLIC codal-core codal-nrf52)
+    add_library(ThirdParty::codal-microbit-v2 ALIAS codal-microbit-v2)
 else()
     # imgui
     #find_package(OpenGL REQUIRED)
