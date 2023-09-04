@@ -4,4 +4,4 @@ add_executable(Simulator
     src/Window.h
 )
 
-target_link_libraries(Simulator ThirdParty::fmt ThirdParty::imgui)
+target_link_libraries(Simulator Core ThirdParty::fmt ThirdParty::imgui ThirdParty::nfd)

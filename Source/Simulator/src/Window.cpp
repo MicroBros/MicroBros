@@ -1,11 +1,13 @@
-#include "Window.h"
-
 #include <fmt/format.h>
+#include <nfd.h>
+#include <iostream>
+
+#include "Window.h"
 
 // sdl2/imgui window intialisation (mostly derived from the official example: https://github.com/ocornut/imgui/blob/master/examples/example_sdl2_opengl2/main.cpp)
 Window::Window()
 {
-#if 1
+#ifdef LINUX
     setenv("SDL_VIDEODRIVER", "x11", 1);
 #endif
 
@@ -66,6 +68,29 @@ Window::Window()
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
+        DrawMenuBar(done);
+
+        // Error dialog
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+        ImGui::PushOverrideID(error_popup);
+        if (ImGui::BeginPopupModal("Error", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            if (error.has_value())
+                ImGui::TextUnformatted(error.value().c_str());
+            ImGui::Separator();
+
+            if (ImGui::Button("OK", ImVec2(120, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+                error = std::nullopt;
+            }
+
+            ImGui::EndPopup();
+        }
+        ImGui::PopID();
+
         // Test window
         ImGui::Begin("Hello, world!");
         ImGui::End();
@@ -79,6 +104,53 @@ Window::Window()
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
     }
+}
+
+void Window::DrawMenuBar(bool &done)
+{
+    ImGui::BeginMainMenuBar();
+    if (ImGui::BeginMenu("File"))
+    {
+        if (ImGui::MenuItem("Open Maze"))
+            OpenMaze();
+        ImGui::Separator();
+        if (ImGui::MenuItem("Quit"))
+            done = true;
+        ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+}
+
+void Window::OpenMaze()
+{
+    nfdchar_t *outPath;
+    nfdfilteritem_t filterItem[1] = {{"Maze files", "txt"}};
+    nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
+
+    if (result == NFD_OKAY)
+    {
+        OpenMaze(std::string(outPath));
+        NFD_FreePath(outPath);
+    }
+    else if (result != NFD_CANCEL)
+    {
+        auto err{fmt::format("{}", NFD_GetError())};
+        Error(err);
+    }
+}
+
+void Window::OpenMaze(std::string path)
+{
+    std::cout << path << std::endl;
+    Error(path);
+}
+
+void Window::Error(std::string err)
+{
+    error = err;
+    ImGui::PushOverrideID(error_popup);
+    ImGui::OpenPopup("Error");
+    ImGui::PopID();
 }
 
 Window::~Window()

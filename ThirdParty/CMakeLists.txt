@@ -87,6 +87,10 @@ else()
 
     add_library(ThirdParty::imgui ALIAS imgui)
 
+    # nativefiledialog
+    add_subdirectory(nativefiledialog-extended)
+    add_library(ThirdParty::nfd ALIAS nfd)
+
     # SDL2
     add_subdirectory(SDL EXCLUDE_FROM_ALL)
     add_library(ThirdParty::SDL2 ALIAS SDL2)

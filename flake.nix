@@ -37,6 +37,7 @@
             packages = with xorg; [
               cmake
               gcc-arm-embedded
+              pkg-config
               (python3.withPackages (ps: with ps; [cffi pyocd]))
               libX11
               libICE
@@ -58,6 +59,7 @@
               libxkbcommon
               libiconv
               libGL
+              gtk3
             ];
 
             shellHook = ''

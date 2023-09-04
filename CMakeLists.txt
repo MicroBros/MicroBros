@@ -17,5 +17,9 @@ if(UNIX AND NOT FIRMWARE)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-4")
 endif()
 
+if(LINUX)
+    add_definitions(-DLINUX)
+endif()
+
 add_subdirectory(Source)
 add_subdirectory(ThirdParty)

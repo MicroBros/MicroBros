@@ -22,3 +22,9 @@
 [submodule "ThirdParty/codal"]
 	path = ThirdParty/codal
 	url = https://github.com/lancaster-university/codal.git
+[submodule "ThirdParty/nativefiledialog-extended"]
+	path = ThirdParty/nativefiledialog-extended
+	url = https://github.com/btzy/nativefiledialog-extended.git
+[submodule "Data/mazefiles"]
+	path = Data/mazefiles
+	url = https://github.com/micromouseonline/mazefiles.git
