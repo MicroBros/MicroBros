@@ -6,7 +6,9 @@
             "request": "launch",
             "name": "Debug",
             "program": "${command:cmake.launchTargetPath}",
-            "args": [],
+            "args": [
+                "${workspaceFolder}/Data/mazefiles/classic/japan2019.txt"
+            ],
             "cwd": "${workspaceFolder}"
         }
     ]

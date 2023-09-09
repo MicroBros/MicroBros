@@ -78,6 +78,7 @@ else()
     )
     target_include_directories(imgui PUBLIC imgui imgui/backends)
     target_link_libraries(imgui PUBLIC ThirdParty::SDL2)
+    target_compile_definitions(imgui PUBLIC -DIMGUI_DEFINE_MATH_OPERATORS)
 
     if(UNIX)
         target_link_libraries(imgui PUBLIC GL)

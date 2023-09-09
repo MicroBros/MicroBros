@@ -25,7 +25,7 @@ Window::Window()
 
     // Create window
     SDL_WindowFlags window_flags{(SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI)};
-    window = SDL_CreateWindow("MicroBros Simulator", 0, 0, 1280, 720, window_flags);
+    window = SDL_CreateWindow("MicroBros Simulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 900, window_flags);
     if (window == nullptr)
         throw std::runtime_error(fmt::format("Error creating window: {}", SDL_GetError()));
 
@@ -50,7 +50,11 @@ Window::Window()
     // Init OpenGL backend for imgui
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL2_Init();
+}
 
+// Main event-loop
+void Window::Run()
+{
     bool done{false};
     while (!done)
     {
@@ -63,47 +67,64 @@ Window::Window()
                 done = true;
         }
 
-        // Start frame
-        ImGui_ImplOpenGL2_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
-
-        DrawMenuBar(done);
-
-        // Error dialog
-        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-        ImGui::PushOverrideID(error_popup);
-        if (ImGui::BeginPopupModal("Error", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-        {
-            if (error.has_value())
-                ImGui::TextUnformatted(error.value().c_str());
-            ImGui::Separator();
-
-            if (ImGui::Button("OK", ImVec2(120, 0)))
-            {
-                ImGui::CloseCurrentPopup();
-                error = std::nullopt;
-            }
-
-            ImGui::EndPopup();
-        }
-        ImGui::PopID();
-
-        // Test window
-        ImGui::Begin("Hello, world!");
-        ImGui::End();
-
-        // Render
-        ImGui::Render();
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-        glClearColor(0, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
-        // glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound
-        ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-        SDL_GL_SwapWindow(window);
+        // Draw ImGui
+        Draw(done);
     }
+}
+
+void Window::Draw(bool &done)
+{
+    ImGuiIO &io = ImGui::GetIO();
+
+    // Start frame
+    ImGui_ImplOpenGL2_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
+
+    DrawMenuBar(done);
+
+    // Error dialog
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    // Ensure error_setup is ran within an ImGui frame
+    if (error_setup)
+    {
+        error_setup.value()();
+        error_setup = std::nullopt;
+    }
+
+    ImGui::PushOverrideID(error_popup);
+    if (ImGui::BeginPopupModal("Error", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        if (error.has_value())
+            ImGui::TextUnformatted(error.value().c_str());
+        ImGui::Separator();
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+            error = std::nullopt;
+        }
+
+        ImGui::EndPopup();
+    }
+    ImGui::PopID();
+
+    // Maze window
+    if (maze)
+    {
+        DrawMazeWindow();
+    }
+
+    // Render
+    ImGui::Render();
+    glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    // glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound
+    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+    SDL_GL_SwapWindow(window);
 }
 
 void Window::DrawMenuBar(bool &done)
@@ -119,6 +140,15 @@ void Window::DrawMenuBar(bool &done)
         ImGui::EndMenu();
     }
     ImGui::EndMainMenuBar();
+}
+
+void Window::DrawMazeWindow()
+{
+    auto size{ImVec2(800.0f, 800.0f)};
+    ImGui::SetNextWindowSize(size);
+    ImGui::Begin("Maze", NULL, ImGuiWindowFlags_NoResize);
+    maze->Draw();
+    ImGui::End();
 }
 
 void Window::OpenMaze()
@@ -141,16 +171,26 @@ void Window::OpenMaze()
 
 void Window::OpenMaze(std::string path)
 {
-    std::cout << path << std::endl;
-    Error(path);
+    try
+    {
+        maze = std::make_unique<SimulatorMaze>(path);
+    }
+    catch (const std::exception &e)
+    {
+        Error(e.what());
+    }
 }
 
 void Window::Error(std::string err)
 {
     error = err;
-    ImGui::PushOverrideID(error_popup);
-    ImGui::OpenPopup("Error");
-    ImGui::PopID();
+    // These has to be ran within an ImGui frame
+    error_setup = [this]()
+    {
+        ImGui::PushOverrideID(error_popup);
+        ImGui::OpenPopup("Error");
+        ImGui::PopID();
+    };
 }
 
 Window::~Window()
