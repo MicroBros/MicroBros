@@ -73,11 +73,11 @@ else()
         imgui/imgui_internal.h
         imgui/imgui_tables.cpp
         imgui/imgui_widgets.cpp
-        imgui/backends/imgui_impl_sdl2.cpp imgui/backends/imgui_impl_sdl2.h
-        imgui/backends/imgui_impl_opengl2.cpp imgui/backends/imgui_impl_opengl2.h
+        imgui/backends/imgui_impl_sdl3.cpp imgui/backends/imgui_impl_sdl3.h
+        imgui/backends/imgui_impl_sdlrenderer3.cpp imgui/backends/imgui_impl_sdlrenderer3.h
     )
     target_include_directories(imgui PUBLIC imgui imgui/backends)
-    target_link_libraries(imgui PUBLIC ThirdParty::SDL2)
+    target_link_libraries(imgui PUBLIC ThirdParty::SDL3)
     target_compile_definitions(imgui PUBLIC -DIMGUI_DEFINE_MATH_OPERATORS)
 
     if(UNIX)
@@ -92,7 +92,7 @@ else()
     add_subdirectory(nativefiledialog-extended)
     add_library(ThirdParty::nfd ALIAS nfd)
 
-    # SDL2
+    # SDL3
     add_subdirectory(SDL EXCLUDE_FROM_ALL)
-    add_library(ThirdParty::SDL2 ALIAS SDL2)
+    add_library(ThirdParty::SDL3 ALIAS SDL3-static)
 endif()
