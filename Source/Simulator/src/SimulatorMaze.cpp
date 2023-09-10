@@ -84,6 +84,17 @@ size_t SimulatorMaze::GetIndex(int x, int y)
     return (width * y + x);
 }
 
+// Simulation
+void SimulatorMaze::Step()
+{
+}
+
+void SimulatorMaze::Reset()
+{
+    running = false;
+}
+
+// Drawing
 const float BORDER_THICKNESS{3};
 const ImVec2 BORDER_THICKNESS_VEC{BORDER_THICKNESS, BORDER_THICKNESS};
 void SimulatorMaze::Draw()
@@ -113,11 +124,11 @@ void SimulatorMaze::Draw()
                 // Draw the goals
                 if (tile & SimulatorMazeTile::Goal)
                 {
-                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC, pos + ImVec2(per * (x + 1), per * (y + 1)), ImColor(100, 20, 20));
+                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC, pos + ImVec2(per * (x + 1), per * (y + 1)), ImColor(0, 100, 0));
                 }
                 else if (tile & SimulatorMazeTile::Start)
                 {
-                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC, pos + ImVec2(per * (x + 1), per * (y + 1)), ImColor(0, 100, 0));
+                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC, pos + ImVec2(per * (x + 1), per * (y + 1)), ImColor(100, 20, 20));
                 }
 
                 // Draw the walls

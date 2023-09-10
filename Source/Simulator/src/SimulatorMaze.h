@@ -27,13 +27,33 @@ public:
     explicit SimulatorMaze(std::string path);
     size_t GetIndex(int x, int y);
 
+    // Simulation
+    void Step();
+    void Reset();
+    inline void SetRunning(bool val)
+    {
+        running = val;
+    };
+    inline void ToggleRunning()
+    {
+        running = !running;
+    };
+    inline float &Speed()
+    {
+        return speed;
+    }
+
+    // Drawing
     void Draw();
 
     // Getters
     inline int Width() { return width; }
     inline int Height() { return height; }
+    inline bool IsRunning() { return running; }
 
 private:
     std::vector<SimulatorMazeTile> tiles;
     int width, height;
+    bool running{false};
+    float speed{1.0f};
 };

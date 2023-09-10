@@ -6,4 +6,12 @@ add_executable(Simulator
 
 target_link_libraries(Simulator Core ThirdParty::fmt ThirdParty::imgui ThirdParty::nfd)
 add_custom_command(TARGET Simulator POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_SOURCE_DIR}/ThirdParty/imgui/misc/fonts/Roboto-Medium.ttf ${CMAKE_CURRENT_BINARY_DIR})
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${PROJECT_SOURCE_DIR}/ThirdParty/imgui/misc/fonts/Roboto-Medium.ttf
+        ${CMAKE_CURRENT_BINARY_DIR}
+)
+add_custom_command(TARGET Simulator POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${PROJECT_SOURCE_DIR}/Data/robot.png
+        ${CMAKE_CURRENT_BINARY_DIR}
+)

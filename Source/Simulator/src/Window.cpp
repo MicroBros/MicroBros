@@ -142,6 +142,24 @@ void Window::DrawMazeWindow()
     ImGui::Begin("Maze", NULL, ImGuiWindowFlags_NoResize);
     maze->Draw();
     ImGui::End();
+
+    ImGui::SetNextWindowSize(ImVec2(200.0f, 600.0f));
+    ImGui::Begin("Simulator", NULL, ImGuiWindowFlags_NoResize);
+
+    // Simulation
+    ImGui::SeparatorText("Simulation");
+    if (ImGui::Button("Step")) // F10
+        maze->Step();
+    if (ImGui::Button("Reset")) // Shift+F5
+        maze->Reset();
+
+    // Run
+    ImGui::SeparatorText("Run");
+    if (ImGui::Button(maze->IsRunning() ? "Pause" : "Start")) // F6 : F5
+        maze->ToggleRunning();
+    ImGui::DragFloat("Cycles/s", &maze->Speed(), 0.1f, 0.0f, 20.0f);
+
+    ImGui::End();
 }
 
 void Window::OpenMaze()
