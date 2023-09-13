@@ -79,4 +79,5 @@
         "cassert": "cpp",
         "nrf53_erratas.h": "c"
     },
+    "dotnet.defaultSolution": "disable",
 }

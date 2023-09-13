@@ -37,7 +37,7 @@ Window::Window(std::string executable)
     // Setup Roboto as font
     std::filesystem::path ttf_path{executable};
     ttf_path.replace_filename("Roboto-Medium.ttf");
-    io.Fonts->AddFontFromFileTTF(ttf_path.c_str(), 16.0f);
+    io.Fonts->AddFontFromFileTTF(ttf_path.string().c_str(), 16.0f);
     ImGui::StyleColorsDark();
 
     // Init OpenGL backend for imgui
