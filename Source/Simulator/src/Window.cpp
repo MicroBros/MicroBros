@@ -17,7 +17,7 @@ Window::Window(std::string executable)
     }
 
     // Create window
-    SDL_WindowFlags window_flags{(SDL_WindowFlags)(SDL_WINDOW_RESIZABLE)};
+    SDL_WindowFlags window_flags{(SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED)};
     window = SDL_CreateWindowWithPosition("MicroBros Simulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 900, window_flags);
     if (window == nullptr)
         throw std::runtime_error(fmt::format("Error creating window: {}", SDL_GetError()));
