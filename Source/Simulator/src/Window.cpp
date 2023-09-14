@@ -34,11 +34,17 @@ Window::Window(std::string executable)
     (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
     // Setup Roboto as font
     std::filesystem::path ttf_path{executable};
     ttf_path.replace_filename("Roboto-Medium.ttf");
     io.Fonts->AddFontFromFileTTF(ttf_path.string().c_str(), 16.0f);
     ImGui::StyleColorsDark();
+
+    // Load mouse sprite
+    std::filesystem::path mouse_sprite_path{executable};
+    mouse_sprite_path.replace_filename("robot.png");
+    mouse_sprite = std::make_unique<Texture>(renderer, mouse_sprite_path);
 
     // Init OpenGL backend for imgui
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
@@ -140,7 +146,7 @@ void Window::DrawMazeWindow()
     auto size{ImVec2(800.0f, 800.0f)};
     ImGui::SetNextWindowSize(size);
     ImGui::Begin("Maze", NULL, ImGuiWindowFlags_NoResize);
-    maze->Draw();
+    maze->Draw(mouse_sprite.get());
     ImGui::End();
 
     ImGui::SetNextWindowSize(ImVec2(200.0f, 600.0f));

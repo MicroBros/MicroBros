@@ -95,4 +95,9 @@ else()
     # SDL3
     add_subdirectory(SDL EXCLUDE_FROM_ALL)
     add_library(ThirdParty::SDL3 ALIAS SDL3-static)
+
+    # stb
+    add_library(stb INTERFACE)
+    target_include_directories(stb INTERFACE stb)
+    add_library(ThirdParty::stb ALIAS stb)
 endif()

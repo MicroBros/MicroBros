@@ -6,6 +6,8 @@
 #include <Bitflags.h>
 #include <imgui.h>
 
+#include "Utils.h"
+
 enum class SimulatorMazeTile
 {
     // Sides of maze walls present
@@ -44,7 +46,7 @@ public:
     }
 
     // Drawing
-    void Draw();
+    void Draw(Texture *mouse_sprite);
 
     // Getters
     inline int Width() { return width; }

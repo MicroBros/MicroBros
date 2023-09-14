@@ -97,7 +97,7 @@ void SimulatorMaze::Reset()
 // Drawing
 const float BORDER_THICKNESS{3};
 const ImVec2 BORDER_THICKNESS_VEC{BORDER_THICKNESS, BORDER_THICKNESS};
-void SimulatorMaze::Draw()
+void SimulatorMaze::Draw(Texture *mouse_sprite)
 {
     // Use the shortest side as size and longest maze size to ensure the entire thing is drawn
     ImVec2 window_pos{ImGui::GetWindowPos()};
@@ -154,4 +154,10 @@ void SimulatorMaze::Draw()
             draw_list->AddRect(pos + ImVec2(per * x, per * y), pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC, ImColor(255, 255, 255));
         }
     }
+
+    // Draw mouse
+    int x{0};
+    int y{height - 1};
+
+    draw_list->AddImage((ImTextureID)mouse_sprite->Tex(), pos + ImVec2(per * x, per * y) + ImVec2(3, 3), pos + ImVec2(per * (x + 1), per * (y + 1)) - ImVec2(3, 3));
 }
