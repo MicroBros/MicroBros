@@ -3,3 +3,5 @@ BreakBeforeBraces: Allman
 IndentWidth: 4
 AccessModifierOffset: -4
 ColumnLimit: 100
+MacroBlockBegin: BITFLAGS_BEGIN
+MacroBlockEnd: BITFLAGS_END

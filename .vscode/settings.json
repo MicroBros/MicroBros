@@ -80,4 +80,7 @@
         "nrf53_erratas.h": "c"
     },
     "dotnet.defaultSolution": "disable",
+    "lldb.showDisassembly": "auto",
+    "lldb.dereferencePointers": true,
+    "lldb.consoleMode": "commands",
 }

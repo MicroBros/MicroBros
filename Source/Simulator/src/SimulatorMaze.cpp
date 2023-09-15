@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 SimulatorMaze::SimulatorMaze(int width, int height)
-    : width{width}, height{height}, tiles{std::vector<SimulatorMazeTile>(width * height)}
+    : width{width}, height{height}, maze{std::make_unique<Maze>(width, height)}
 {
 }
 
@@ -40,25 +40,25 @@ SimulatorMaze::SimulatorMaze(std::string path)
         throw std::runtime_error(
             fmt::format("Map expected to be square! Got {}x{}", width, height));
 
-    // Initialise the tiles
-    tiles = std::vector<SimulatorMazeTile>(width * height);
+    // Initialise the maze
+    maze = std::make_unique<Maze>(width, height);
 
     for (int y{0}; y < height; ++y)
     {
         for (int x{0}; x < width; ++x)
         {
-            size_t i{GetIndex(x, y)};
-            SimulatorMazeTile tile = (SimulatorMazeTile)0;
+            // 0, 0 is at bottom left
+            MazeTile &tile{maze->GetTile(x, height - y - 1)};
 
 #define CHECK_DIRECTION(dir, x, y)                                                                 \
     if (lines.at(y).at(x) != ' ')                                                                  \
         tile = tile | dir;
 
             // Get the different wall directions
-            CHECK_DIRECTION(SimulatorMazeTile::Top, (x * 4) + 2, y * 2)
-            CHECK_DIRECTION(SimulatorMazeTile::Bottom, (x * 4) + 2, (y * 2) + 2)
-            CHECK_DIRECTION(SimulatorMazeTile::Left, x * 4, (y * 2) + 1)
-            CHECK_DIRECTION(SimulatorMazeTile::Right, (x * 4) + 4, (y * 2) + 1)
+            CHECK_DIRECTION(MazeTile::Top, (x * 4) + 2, y * 2)
+            CHECK_DIRECTION(MazeTile::Bottom, (x * 4) + 2, (y * 2) + 2)
+            CHECK_DIRECTION(MazeTile::Left, x * 4, (y * 2) + 1)
+            CHECK_DIRECTION(MazeTile::Right, (x * 4) + 4, (y * 2) + 1)
 
             // Find the center character of the tile
             char center{lines.at((y * 2) + 1).at((x * 4) + 2)};
@@ -66,21 +66,17 @@ SimulatorMaze::SimulatorMaze(std::string path)
             switch (center)
             {
             case 'G':
-                tile = tile | SimulatorMazeTile::Goal;
+                tile |= MazeTile::Goal;
                 break;
             case 'S':
-                tile = tile | SimulatorMazeTile::Start;
+                tile |= MazeTile::Start;
                 break;
             default:
                 break;
             }
-
-            tiles[i] = tile;
         }
     }
 }
-
-size_t SimulatorMaze::GetIndex(int x, int y) { return (width * y + x); }
 
 // Simulation
 void SimulatorMaze::Step() {}
@@ -112,16 +108,18 @@ void SimulatorMaze::Draw(Texture *mouse_sprite)
         {
             if (!(x >= width || y >= height))
             {
-                SimulatorMazeTile tile{tiles[GetIndex(x, y)]};
+                // It is rendering top-left as 0,0. but the maze uses bottom-left as 0,0. Correct
+                // for it by inverting the y
+                MazeTile &tile{maze->GetTile(x, height - y - 1)};
 
                 // Draw the goals
-                if (tile & SimulatorMazeTile::Goal)
+                if (tile.Contains(MazeTile::Goal))
                 {
                     draw_list->AddRectFilled(pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC,
                                              pos + ImVec2(per * (x + 1), per * (y + 1)),
                                              ImColor(0, 100, 0));
                 }
-                else if (tile & SimulatorMazeTile::Start)
+                else if (tile.Contains(MazeTile::Start))
                 {
                     draw_list->AddRectFilled(pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC,
                                              pos + ImVec2(per * (x + 1), per * (y + 1)),
@@ -129,28 +127,28 @@ void SimulatorMaze::Draw(Texture *mouse_sprite)
                 }
 
                 // Draw the walls
-                if (tile & SimulatorMazeTile::Top)
+                if (tile.Contains(MazeTile::Top))
                 {
                     draw_list->AddRectFilled(pos + ImVec2(per * x + BORDER_THICKNESS, per * y),
                                              pos +
                                                  ImVec2(per * (x + 1), per * y + BORDER_THICKNESS),
                                              ImColor(200, 0, 0));
                 }
-                if (tile & SimulatorMazeTile::Bottom)
+                if (tile.Contains(MazeTile::Bottom))
                 {
                     draw_list->AddRectFilled(
                         pos + ImVec2(per * x + BORDER_THICKNESS, per * (y + 1)),
                         pos + ImVec2(per * (x + 1), per * (y + 1) + BORDER_THICKNESS),
                         ImColor(200, 0, 0));
                 }
-                if (tile & SimulatorMazeTile::Left)
+                if (tile.Contains(MazeTile::Left))
                 {
                     draw_list->AddRectFilled(pos + ImVec2(per * x, per * y + BORDER_THICKNESS),
                                              pos +
                                                  ImVec2(per * x + BORDER_THICKNESS, per * (y + 1)),
                                              ImColor(200, 0, 0));
                 }
-                if (tile & SimulatorMazeTile::Right)
+                if (tile.Contains(MazeTile::Right))
                 {
                     draw_list->AddRectFilled(
                         pos + ImVec2(per * (x + 1), per * y + BORDER_THICKNESS),
