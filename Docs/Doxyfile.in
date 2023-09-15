@@ -1,0 +1,28 @@
+# Init
+DOXYFILE_ENCODING = UTF-8
+
+# Setup project
+PROJECT_NAME = MicroBros
+
+# Setup generation
+GENERATE_LATEX = NO
+
+# Include Docs and Source, setup output
+INPUT = ${PROJECT_SOURCE_DIR}/Docs/ \
+        ${PROJECT_SOURCE_DIR}/Source/ \
+        ${PROJECT_SOURCE_DIR}/README.md
+
+OUTPUT_DIRECTORY = ${CMAKE_CURRENT_BINARY_DIR}/Docs/
+FILE_PATTERNS = *.cpp *.h *.md
+RECURSIVE = YES
+
+# Setup markdown
+USE_MDFILE_AS_MAINPAGE = README.md
+
+# Setup theme (doxygen-awesome-css)
+GENERATE_TREEVIEW = YES
+DISABLE_INDEX = NO
+FULL_SIDEBAR = NO
+HTML_EXTRA_STYLESHEET = ${PROJECT_SOURCE_DIR}/ThirdParty/doxygen-awesome-css/doxygen-awesome.css \
+                        ${PROJECT_SOURCE_DIR}/ThirdParty/doxygen-awesome-css/doxygen-awesome-sidebar-only.css \
+HTML_COLORSTYLE = LIGHT

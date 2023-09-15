@@ -36,7 +36,9 @@
             name = "microbros";
             packages = with xorg; [
               cmake
+              doxygen
               gcc-arm-embedded
+              graphviz
               pkg-config
               (python3.withPackages (ps: with ps; [cffi pyocd]))
               libX11

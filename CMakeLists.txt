@@ -23,3 +23,23 @@ endif()
 
 add_subdirectory(Source)
 add_subdirectory(ThirdParty)
+
+# Doxygen
+find_package(Doxygen)
+
+set(DOXYGEN_GENERATE_HTML NO)
+set(DOXYGEN_GENERATE_MAN YES)
+
+if(DOXYGEN_FOUND)
+    set(DOXYFILE ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Docs/Doxyfile.in ${DOXYFILE})
+
+    add_custom_target(Docs ALL
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        VERBATIM
+    )
+else()
+    message("Doxygen not found, not adding Docs target")
+endif()
