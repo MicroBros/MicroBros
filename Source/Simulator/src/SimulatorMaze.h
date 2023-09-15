@@ -1,10 +1,11 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-#include <string>
 #include <Bitflags.h>
 #include <imgui.h>
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 #include "Utils.h"
 
@@ -32,18 +33,9 @@ public:
     // Simulation
     void Step();
     void Reset();
-    inline void SetRunning(bool val)
-    {
-        running = val;
-    };
-    inline void ToggleRunning()
-    {
-        running = !running;
-    };
-    inline float &Speed()
-    {
-        return speed;
-    }
+    inline void SetRunning(bool val) { running = val; };
+    inline void ToggleRunning() { running = !running; };
+    inline float &Speed() { return speed; }
 
     // Drawing
     void Draw(Texture *mouse_sprite);

@@ -1,7 +1,8 @@
+#include <nfd.h>
+
 #include <filesystem>
 #include <iostream>
 #include <memory>
-#include <nfd.h>
 
 #include "Window.h"
 

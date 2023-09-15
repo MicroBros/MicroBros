@@ -1,12 +1,12 @@
-#include <fstream>
-#include <fmt/format.h>
-#include <stdexcept>
-
 #include "SimulatorMaze.h"
 
-SimulatorMaze::SimulatorMaze(int width, int height) : width{width},
-                                                      height{height},
-                                                      tiles{std::vector<SimulatorMazeTile>(width * height)}
+#include <fmt/format.h>
+
+#include <fstream>
+#include <stdexcept>
+
+SimulatorMaze::SimulatorMaze(int width, int height)
+    : width{width}, height{height}, tiles{std::vector<SimulatorMazeTile>(width * height)}
 {
 }
 
@@ -37,7 +37,8 @@ SimulatorMaze::SimulatorMaze(std::string path)
     height = ((static_cast<int>(lines.size()) - 1) / 2);
 
     if (width != height)
-        throw std::runtime_error(fmt::format("Map expected to be square! Got {}x{}", width, height));
+        throw std::runtime_error(
+            fmt::format("Map expected to be square! Got {}x{}", width, height));
 
     // Initialise the tiles
     tiles = std::vector<SimulatorMazeTile>(width * height);
@@ -49,8 +50,8 @@ SimulatorMaze::SimulatorMaze(std::string path)
             size_t i{GetIndex(x, y)};
             SimulatorMazeTile tile = (SimulatorMazeTile)0;
 
-#define CHECK_DIRECTION(dir, x, y) \
-    if (lines.at(y).at(x) != ' ')  \
+#define CHECK_DIRECTION(dir, x, y)                                                                 \
+    if (lines.at(y).at(x) != ' ')                                                                  \
         tile = tile | dir;
 
             // Get the different wall directions
@@ -79,20 +80,12 @@ SimulatorMaze::SimulatorMaze(std::string path)
     }
 }
 
-size_t SimulatorMaze::GetIndex(int x, int y)
-{
-    return (width * y + x);
-}
+size_t SimulatorMaze::GetIndex(int x, int y) { return (width * y + x); }
 
 // Simulation
-void SimulatorMaze::Step()
-{
-}
+void SimulatorMaze::Step() {}
 
-void SimulatorMaze::Reset()
-{
-    running = false;
-}
+void SimulatorMaze::Reset() { running = false; }
 
 // Drawing
 const float BORDER_THICKNESS{3};
@@ -124,34 +117,52 @@ void SimulatorMaze::Draw(Texture *mouse_sprite)
                 // Draw the goals
                 if (tile & SimulatorMazeTile::Goal)
                 {
-                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC, pos + ImVec2(per * (x + 1), per * (y + 1)), ImColor(0, 100, 0));
+                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC,
+                                             pos + ImVec2(per * (x + 1), per * (y + 1)),
+                                             ImColor(0, 100, 0));
                 }
                 else if (tile & SimulatorMazeTile::Start)
                 {
-                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC, pos + ImVec2(per * (x + 1), per * (y + 1)), ImColor(100, 20, 20));
+                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC,
+                                             pos + ImVec2(per * (x + 1), per * (y + 1)),
+                                             ImColor(100, 20, 20));
                 }
 
                 // Draw the walls
                 if (tile & SimulatorMazeTile::Top)
                 {
-                    draw_list->AddRectFilled(pos + ImVec2(per * x + BORDER_THICKNESS, per * y), pos + ImVec2(per * (x + 1), per * y + BORDER_THICKNESS), ImColor(200, 0, 0));
+                    draw_list->AddRectFilled(pos + ImVec2(per * x + BORDER_THICKNESS, per * y),
+                                             pos +
+                                                 ImVec2(per * (x + 1), per * y + BORDER_THICKNESS),
+                                             ImColor(200, 0, 0));
                 }
                 if (tile & SimulatorMazeTile::Bottom)
                 {
-                    draw_list->AddRectFilled(pos + ImVec2(per * x + BORDER_THICKNESS, per * (y + 1)), pos + ImVec2(per * (x + 1), per * (y + 1) + BORDER_THICKNESS), ImColor(200, 0, 0));
+                    draw_list->AddRectFilled(
+                        pos + ImVec2(per * x + BORDER_THICKNESS, per * (y + 1)),
+                        pos + ImVec2(per * (x + 1), per * (y + 1) + BORDER_THICKNESS),
+                        ImColor(200, 0, 0));
                 }
                 if (tile & SimulatorMazeTile::Left)
                 {
-                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y + BORDER_THICKNESS), pos + ImVec2(per * x + BORDER_THICKNESS, per * (y + 1)), ImColor(200, 0, 0));
+                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y + BORDER_THICKNESS),
+                                             pos +
+                                                 ImVec2(per * x + BORDER_THICKNESS, per * (y + 1)),
+                                             ImColor(200, 0, 0));
                 }
                 if (tile & SimulatorMazeTile::Right)
                 {
-                    draw_list->AddRectFilled(pos + ImVec2(per * (x + 1), per * y + BORDER_THICKNESS), pos + ImVec2(per * (x + 1) + BORDER_THICKNESS, per * (y + 1)), ImColor(200, 0, 0));
+                    draw_list->AddRectFilled(
+                        pos + ImVec2(per * (x + 1), per * y + BORDER_THICKNESS),
+                        pos + ImVec2(per * (x + 1) + BORDER_THICKNESS, per * (y + 1)),
+                        ImColor(200, 0, 0));
                 }
             }
 
             // Draw the corners of every tile
-            draw_list->AddRect(pos + ImVec2(per * x, per * y), pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC, ImColor(255, 255, 255));
+            draw_list->AddRect(pos + ImVec2(per * x, per * y),
+                               pos + ImVec2(per * x, per * y) + BORDER_THICKNESS_VEC,
+                               ImColor(255, 255, 255));
         }
     }
 
@@ -159,5 +170,7 @@ void SimulatorMaze::Draw(Texture *mouse_sprite)
     int x{0};
     int y{height - 1};
 
-    draw_list->AddImage((ImTextureID)mouse_sprite->Tex(), pos + ImVec2(per * x, per * y) + ImVec2(3, 3), pos + ImVec2(per * (x + 1), per * (y + 1)) - ImVec2(3, 3));
+    draw_list->AddImage((ImTextureID)mouse_sprite->Tex(),
+                        pos + ImVec2(per * x, per * y) + ImVec2(3, 3),
+                        pos + ImVec2(per * (x + 1), per * (y + 1)) - ImVec2(3, 3));
 }

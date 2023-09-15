@@ -1,14 +1,15 @@
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <stdio.h>
 #include <SDL.h>
-#include <optional>
 #include <imgui.h>
-#include <imgui_internal.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
+#include <imgui_internal.h>
+#include <stdio.h>
+
+#include <functional>
+#include <memory>
+#include <optional>
 
 #include "SimulatorMaze.h"
 #include "Utils.h"

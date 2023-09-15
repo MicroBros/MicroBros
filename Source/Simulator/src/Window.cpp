@@ -1,11 +1,13 @@
-#include <fmt/format.h>
-#include <nfd.h>
-#include <iostream>
-#include <filesystem>
-
 #include "Window.h"
 
-// SDL3/imgui window intialisation (mostly derived from the official example: https://github.com/ocornut/imgui/blob/master/examples/example_SDL3_opengl2/main.cpp)
+#include <fmt/format.h>
+#include <nfd.h>
+
+#include <filesystem>
+#include <iostream>
+
+// SDL3/imgui window intialisation (mostly derived from the official example:
+// https://github.com/ocornut/imgui/blob/master/examples/example_SDL3_opengl2/main.cpp)
 Window::Window(std::string executable)
 {
 #ifdef LINUX
@@ -18,12 +20,14 @@ Window::Window(std::string executable)
 
     // Create window
     SDL_WindowFlags window_flags{(SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED)};
-    window = SDL_CreateWindowWithPosition("MicroBros Simulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 900, window_flags);
+    window = SDL_CreateWindowWithPosition("MicroBros Simulator", SDL_WINDOWPOS_CENTERED,
+                                          SDL_WINDOWPOS_CENTERED, 1600, 900, window_flags);
     if (window == nullptr)
         throw std::runtime_error(fmt::format("Error creating window: {}", SDL_GetError()));
 
     // Setup renderer
-    renderer = SDL_CreateRenderer(window, nullptr, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+    renderer =
+        SDL_CreateRenderer(window, nullptr, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
     if (renderer == nullptr)
         throw std::runtime_error(fmt::format("Error creating SDL renderer: {}", SDL_GetError()));
 
@@ -64,7 +68,9 @@ void Window::Run()
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL3_ProcessEvent(&event);
-            if (event.type == SDL_EVENT_QUIT) // || (event.type == SDL_EVENT_WINDOW && event.window.event == SDL_EVENT_WINDOW_CLOSE && event.window.windowID == SDL_GetWindowID(window)))
+            if (event.type == SDL_EVENT_QUIT) // || (event.type == SDL_EVENT_WINDOW &&
+                                              // event.window.event == SDL_EVENT_WINDOW_CLOSE &&
+                                              // event.window.windowID == SDL_GetWindowID(window)))
                 done = true;
         }
 
