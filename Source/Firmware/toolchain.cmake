@@ -19,6 +19,7 @@ find_program(ARM_NONE_EABI_RANLIB arm-none-eabi-ranlib)
 
 # Setup toolchain and target compilers
 set(TOOLCHAIN arm-none-eabi)
+set(CMAKE_ASM_COMPILER ${ARM_NONE_EABI_GCC} CACHE INTERNAL "ASM Compiler")
 set(CMAKE_C_COMPILER ${ARM_NONE_EABI_GCC} CACHE INTERNAL "C Compiler")
 set(CMAKE_CXX_COMPILER ${ARM_NONE_EABI_GXX} CACHE INTERNAL "C++ Compiler")
 set(CMAKE_OBJCOPY ${ARM_NONE_EABI_OBJCOPY})
