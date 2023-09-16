@@ -13,6 +13,7 @@ INPUT = ${PROJECT_SOURCE_DIR}/Docs/ \
         ${PROJECT_SOURCE_DIR}/Source/ \
         ${PROJECT_SOURCE_DIR}/README.md
 
+STRIP_FROM_PATH = ${PROJECT_SOURCE_DIR}
 STRIP_FROM_INC_PATH = ${PROJECT_SOURCE_DIR}/Source/Core/include \
     ${PROJECT_SOURCE_DIR}/Source/Core/src \
     ${PROJECT_SOURCE_DIR}/Source/Firmware/src \
