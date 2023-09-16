@@ -6,7 +6,7 @@ Third-party dependencies are managed using git submodules, fetch/update them wit
 ```
 git submodule update --init --recursive
 ```
-It is recommended to do this after pulling changes from others as submodules may have been added or updated. 
+It is recommended to do this after pulling changes from others as submodules may have been added or updated.
 
 The following software/dependencies are required to work on MicroBros.
 - Base dependencies
@@ -44,4 +44,14 @@ The following extensions are recommended to install:
 - `vadimcn.vscode-lldb` (Natibe debugger using LLDB from LLVM)
 
 ## Flashing firmware
-Currently the Firmware.hex file generated in 
+Using pyocd one can flash the firmware to the micro:bit v2.
+
+If you are missing pyocd, it can be installed (after installing Python 3) by:
+```
+pip install -U pyocd
+```
+
+After this one can flash the firmware after building the `Firmware` target in the `Firmware` preset by running
+```
+pyocd load --target nrf52833 build/Firmware/Source/Firmware/Firmware.hex
+```

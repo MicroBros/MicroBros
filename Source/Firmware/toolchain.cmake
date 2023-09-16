@@ -1,8 +1,15 @@
 # Setup system
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR ARM)
+SET(CMAKE_CROSSCOMPILING 1)
 
-include(${CMAKE_SOURCE_DIR}/ThirdParty/codal/utils/cmake/toolchains/ARM_GCC/compiler-flags.cmake)
+# Set FIRMWARE and disable OS in fmt
+add_definitions(-DFIRMWARE)
+set(FMT_OS OFF)
+
+set(PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
+include(${PROJECT_ROOT}/ThirdParty/codal/utils/cmake/toolchains/ARM_GCC/compiler-flags.cmake)
+string(REPLACE "-lm" "-lnosys -lm" CMAKE_C_LINK_EXECUTABLE "${CMAKE_C_LINK_EXECUTABLE}")
 
 find_program(ARM_NONE_EABI_AR arm-none-eabi-ar)
 find_program(ARM_NONE_EABI_GCC arm-none-eabi-gcc)
@@ -81,7 +88,6 @@ set(COMMON_FLAGS
 
 set(CFLAGS ${COMMON_FLAGS}
     -std=c99
-    --specs=nosys.specs
     -Warray-bounds
 )
 list(JOIN CFLAGS " " CFLAGS)
@@ -98,6 +104,7 @@ set(CXXFLAGS ${COMMON_FLAGS}
     -Wl,--sort-common
     -Wl,--sort-section=alignment
     -Wno-array-bounds
+    -Wno-register
 )
 list(JOIN CXXFLAGS " " CXXFLAGS)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXXFLAGS}")
@@ -105,7 +112,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXXFLAGS}")
 SET(ASM_OPTIONS
     -fno-exceptions
     -fno-unwind-tables
-    --specs=nosys.specs
     -mcpu=cortex-m4
     -mthumb
 )
@@ -119,8 +125,7 @@ list(JOIN LINKER_FLAGS " " LINKER_FLAGS)
 set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
-
-set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -T${CMAKE_SOURCE_DIR}/ThirdParty/codal-microbit-v2/ld/nrf52833-softdevice.ld")
+set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -T${PROJECT_ROOT}/ThirdParty/codal-microbit-v2/ld/nrf52833-softdevice.ld")
 
 function(microbit_executable TARGET)
     target_link_libraries(${TARGET} PUBLIC ThirdParty::codal-microbit-v2)

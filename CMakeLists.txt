@@ -40,6 +40,7 @@ if(DOXYGEN_FOUND)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         VERBATIM
     )
+    set_target_properties(Docs PROPERTIES EXCLUDE_FROM_ALL ON)
 else()
     message("Doxygen not found, not adding Docs target")
 endif()

@@ -47,10 +47,12 @@ public:
     //! Get a single MazeTile at the x, y position
     inline MazeTile &GetTile(int x, int y)
     {
+#ifndef FIRMWARE
         if (x >= width)
             throw std::out_of_range(fmt::format("GetTile x {} out of range {} width", x, width));
         if (y >= height)
             throw std::out_of_range(fmt::format("GetTile y {} out of range {} height", y, height));
+#endif
 
         return tiles[MAZE_INDEX(x, y)];
     }
