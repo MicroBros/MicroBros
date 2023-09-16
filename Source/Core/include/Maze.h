@@ -14,6 +14,10 @@ namespace Core
 {
 
 // clang-format off
+/*! \brief Bitflags to hold the state of individual maze tiles
+ *
+ *  Currently it contains flags for all four directions of walls and if the tile is a start or goal tile
+ */
 BITFLAGS_BEGIN(MazeTile, uint8_t)
     // Sides of maze walls present
     Top = 1 << 0,
@@ -27,11 +31,20 @@ BITFLAGS_BEGIN(MazeTile, uint8_t)
 BITFLAGS_END(MazeTile)
 // clang-format on
 
+/*! \brief Grid based structure with every MazeTile
+ *
+ *  It keeps track of width and height and has a simple function get a tile based on position
+ */
 class Maze
 {
 public:
+    //! Create a empty new maze with the width and height specified
     Maze(int width, int height);
 
+    //! Reset the walls of the maze
+    void ResetWalls();
+
+    //! Get a single MazeTile at the x, y position
     inline MazeTile &GetTile(int x, int y)
     {
         if (x >= width)

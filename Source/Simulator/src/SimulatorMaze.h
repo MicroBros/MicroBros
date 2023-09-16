@@ -7,6 +7,7 @@
 
 #include <Bitflags.h>
 #include <Maze.h>
+#include <Mouse.h>
 #include <imgui.h>
 
 #include "Utils.h"
@@ -14,6 +15,11 @@
 namespace Simulator
 {
 
+// clang-format off
+/*! \brief Class for a simulator driven Core::Mouse
+ *
+ *  The SimulatorMaze has to load the maze file and controls the various aspects of the simulated Mouse
+ */
 class SimulatorMaze
 {
 public:
@@ -28,7 +34,7 @@ public:
     inline float &Speed() { return speed; }
 
     // Drawing
-    void Draw(Texture *mouse_sprite);
+    void Draw(Utils::Texture *mouse_sprite);
 
     // Getters
     inline int Width() { return width; }
@@ -37,6 +43,7 @@ public:
 
 private:
     std::unique_ptr<Core::Maze> maze{nullptr};
+    std::unique_ptr<Core::Mouse> mouse{nullptr};
     int width, height;
     bool running{false};
     float speed{1.0f};

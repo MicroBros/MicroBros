@@ -11,7 +11,8 @@ namespace Simulator
 {
 
 SimulatorMaze::SimulatorMaze(int width, int height)
-    : width{width}, height{height}, maze{std::make_unique<Maze>(width, height)}
+    : width{width}, height{height}, maze{std::make_unique<Maze>(width, height)},
+      mouse{std::make_unique<Mouse>(width, height)}
 {
 }
 
@@ -81,19 +82,42 @@ SimulatorMaze::SimulatorMaze(std::string path)
             }
         }
     }
+
+    // Create a maze for the mouse, but do not include the walls
+    auto mouse_maze = std::make_unique<Maze>(width, height);
+    for (int y{0}; y < height; ++y)
+    {
+        for (int x{0}; x < width; ++x)
+        {
+            MazeTile &tile{maze->GetTile(x, y)};
+            MazeTile &mouse_tile{mouse_maze->GetTile(x, y)};
+            if (tile.Contains(MazeTile::Goal))
+                mouse_tile |= MazeTile::Goal;
+            if (tile.Contains(MazeTile::Start))
+                mouse_tile |= MazeTile::Start;
+        }
+    }
+
+    // Initialise the mouse
+    mouse = std::make_unique<Mouse>(std::move(mouse_maze));
 }
 
 // Simulation
 void SimulatorMaze::Step() {}
 
-void SimulatorMaze::Reset() { running = false; }
+void SimulatorMaze::Reset()
+{
+    running = false;
+    mouse->Reset();
+}
 
 // Drawing
 const float BORDER_THICKNESS{3};
 const ImVec2 BORDER_THICKNESS_VEC{BORDER_THICKNESS, BORDER_THICKNESS};
-void SimulatorMaze::Draw(Texture *mouse_sprite)
+void SimulatorMaze::Draw(Utils::Texture *mouse_sprite)
 {
-    // Use the shortest side as size and longest maze size to ensure the entire thing is drawn
+    // Use the shortest side as size and longest maze size to ensure the entire thing is
+    // drawn
     ImVec2 window_pos{ImGui::GetWindowPos()};
     ImVec2 content_min{ImGui::GetWindowContentRegionMin()};
     ImVec2 content_max{ImGui::GetWindowContentRegionMax()};
@@ -113,8 +137,8 @@ void SimulatorMaze::Draw(Texture *mouse_sprite)
         {
             if (!(x >= width || y >= height))
             {
-                // It is rendering top-left as 0,0. but the maze uses bottom-left as 0,0. Correct
-                // for it by inverting the y
+                // It is rendering top-left as 0,0. but the maze uses bottom-left as 0,0.
+                // Correct for it by inverting the y
                 MazeTile &tile{maze->GetTile(x, height - y - 1)};
 
                 // Draw the goals

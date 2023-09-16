@@ -23,4 +23,12 @@ Mouse::Mouse(int width, int height, bool initialize_tiles)
 
 Mouse::Mouse(std::unique_ptr<Maze> maze) : maze{std::move(maze)} {}
 
+void Mouse::Reset()
+{
+    x = 0.0;
+    y = 0.0;
+    rot = 0.0;
+    maze->ResetWalls();
+}
+
 } // namespace Core

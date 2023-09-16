@@ -6,7 +6,7 @@
 
 #include "Utils.h"
 
-namespace Simulator
+namespace Simulator::Utils
 {
 
 Texture::Texture(SDL_Renderer *renderer, std::string path)
@@ -42,4 +42,4 @@ Texture::~Texture()
         delete data;
 }
 
-} // namespace Simulator
+} // namespace Simulator::Utils

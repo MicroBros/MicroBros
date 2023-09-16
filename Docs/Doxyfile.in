@@ -6,6 +6,7 @@ PROJECT_NAME = MicroBros
 
 # Setup generation
 GENERATE_LATEX = NO
+MACRO_EXPANSION = YES
 
 # Include Docs and Source, setup output
 INPUT = ${PROJECT_SOURCE_DIR}/Docs/ \

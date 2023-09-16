@@ -4,9 +4,12 @@
 
 #include <string>
 
-namespace Simulator
+namespace Simulator::Utils
 {
 
+// clang-format off
+/*! \brief Util to load images and turn them into SDL textures
+ */
 class Texture
 {
 public:

@@ -15,11 +15,11 @@
 private:                                                                                           \
     using ValueType = std::underlying_type_t<Flags>;                                               \
     ValueType value;                                                                               \
-    IDENT(ValueType value) : value{value} {}                                                       \
                                                                                                    \
 public:                                                                                            \
     IDENT() : value{0} {}                                                                          \
     IDENT(Flags value) : value{value} {}                                                           \
+    IDENT(ValueType value) : value{value} {}                                                       \
                                                                                                    \
     inline IDENT operator|(IDENT rhs) const noexcept                                               \
     {                                                                                              \

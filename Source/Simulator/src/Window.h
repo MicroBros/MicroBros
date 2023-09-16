@@ -17,6 +17,8 @@
 namespace Simulator
 {
 
+/*! \brief Window creation and main UI for simulator
+ */
 class Window
 {
 public:
@@ -35,7 +37,7 @@ private:
     float dpi{1.0f};
     SDL_Window *window{nullptr};
     SDL_Renderer *renderer{nullptr};
-    std::unique_ptr<Texture> mouse_sprite{nullptr};
+    std::unique_ptr<Utils::Texture> mouse_sprite{nullptr};
     std::optional<std::function<void(void)>> error_setup{std::nullopt};
     std::optional<std::string> error{std::nullopt};
     std::unique_ptr<SimulatorMaze> maze{nullptr};

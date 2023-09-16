@@ -51,7 +51,7 @@ Window::Window(std::string executable)
     // Load mouse sprite
     std::filesystem::path mouse_sprite_path{executable};
     mouse_sprite_path.replace_filename("robot.png");
-    mouse_sprite = std::make_unique<Texture>(renderer, mouse_sprite_path.string());
+    mouse_sprite = std::make_unique<Utils::Texture>(renderer, mouse_sprite_path.string());
 
     // Init OpenGL backend for imgui
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
