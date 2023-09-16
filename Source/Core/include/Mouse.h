@@ -4,6 +4,9 @@
 
 #include "Maze.h"
 
+namespace Core
+{
+
 class Mouse
 {
 public:
@@ -15,3 +18,5 @@ public:
 private:
     std::unique_ptr<Maze> maze{nullptr};
 };
+
+}

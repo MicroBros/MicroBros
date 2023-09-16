@@ -14,6 +14,9 @@
 #include "SimulatorMaze.h"
 #include "Utils.h"
 
+namespace Simulator
+{
+
 class Window
 {
 public:
@@ -38,3 +41,5 @@ private:
     std::unique_ptr<SimulatorMaze> maze{nullptr};
     ImGuiID error_popup{ImHashStr("ERROR_POPUP")};
 };
+
+} // namespace Simulator

@@ -5,6 +5,11 @@
 #include <fstream>
 #include <stdexcept>
 
+using namespace Core;
+
+namespace Simulator
+{
+
 SimulatorMaze::SimulatorMaze(int width, int height)
     : width{width}, height{height}, maze{std::make_unique<Maze>(width, height)}
 {
@@ -172,3 +177,5 @@ void SimulatorMaze::Draw(Texture *mouse_sprite)
                         pos + ImVec2(per * x, per * y) + ImVec2(3, 3),
                         pos + ImVec2(per * (x + 1), per * (y + 1)) - ImVec2(3, 3));
 }
+
+} // namespace Simulator

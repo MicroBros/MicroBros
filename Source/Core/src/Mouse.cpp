@@ -1,5 +1,8 @@
 #include "Mouse.h"
 
+namespace Core
+{
+
 Mouse::Mouse(int width, int height, bool initialize_tiles)
 {
     maze = std::make_unique<Maze>(width, height);
@@ -19,3 +22,5 @@ Mouse::Mouse(int width, int height, bool initialize_tiles)
 }
 
 Mouse::Mouse(std::unique_ptr<Maze> maze) : maze{std::move(maze)} {}
+
+} // namespace Core

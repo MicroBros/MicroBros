@@ -11,6 +11,9 @@
 
 #include "Utils.h"
 
+namespace Simulator
+{
+
 class SimulatorMaze
 {
 public:
@@ -33,8 +36,10 @@ public:
     inline bool IsRunning() { return running; }
 
 private:
-    std::unique_ptr<Maze> maze{nullptr};
+    std::unique_ptr<Core::Maze> maze{nullptr};
     int width, height;
     bool running{false};
     float speed{1.0f};
 };
+
+} // namespace Simulator

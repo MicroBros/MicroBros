@@ -6,6 +6,9 @@
 
 #include "Utils.h"
 
+namespace Simulator
+{
+
 Texture::Texture(SDL_Renderer *renderer, std::string path)
 {
     // Load uncompressed data of image
@@ -38,3 +41,5 @@ Texture::~Texture()
     if (data)
         delete data;
 }
+
+} // namespace Simulator

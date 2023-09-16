@@ -4,6 +4,9 @@
 
 #include <string>
 
+namespace Simulator
+{
+
 class Texture
 {
 public:
@@ -22,3 +25,5 @@ private:
 
     int width, height, bpp;
 };
+
+} // namespace Simulator

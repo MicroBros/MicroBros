@@ -6,6 +6,9 @@
 #include <filesystem>
 #include <iostream>
 
+namespace Simulator
+{
+
 // SDL3/imgui window intialisation (mostly derived from the official example:
 // https://github.com/ocornut/imgui/blob/master/examples/example_SDL3_opengl2/main.cpp)
 Window::Window(std::string executable)
@@ -226,3 +229,5 @@ Window::~Window()
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
+
+} // namespace Simulator

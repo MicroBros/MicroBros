@@ -10,6 +10,9 @@
 
 #define MAZE_INDEX(x, y) (width * y) + x
 
+namespace Core
+{
+
 // clang-format off
 BITFLAGS_BEGIN(MazeTile, uint8_t)
     // Sides of maze walls present
@@ -44,3 +47,5 @@ private:
     int height;
     std::vector<MazeTile> tiles;
 };
+
+} // namespace Core

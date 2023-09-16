@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
     try
     {
-        auto window = std::make_unique<Window>(argv[0]);
+        auto window = std::make_unique<Simulator::Window>(argv[0]);
 
         // Parse command arguments
         if (!args.empty())
