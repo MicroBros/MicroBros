@@ -1,4 +1,4 @@
-#include "Maze.h"
+#include "Core/Maze.h"
 
 namespace Core
 {

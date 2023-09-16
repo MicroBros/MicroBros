@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#include <Bitflags.h>
-#include <Maze.h>
-#include <Mouse.h>
+#include <Core/Bitflags.h>
+#include <Core/Maze.h>
+#include <Core/Mouse.h>
 #include <imgui.h>
 
 #include "Utils.h"
