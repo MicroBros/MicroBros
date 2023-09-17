@@ -1,15 +1,16 @@
 #pragma once
 
+#include <functional>
+#include <memory>
+#include <optional>
+#include <vector>
+
 #include <SDL.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 #include <imgui_internal.h>
 #include <stdio.h>
-
-#include <functional>
-#include <memory>
-#include <optional>
 
 #include "SimulatorMaze.h"
 #include "Utils.h"
@@ -35,6 +36,8 @@ private:
     void Error(std::string err);
 
     float dpi{1.0f};
+    std::vector<std::string> algorithms;
+    size_t algorithm{0};
     SDL_Window *window{nullptr};
     SDL_Renderer *renderer{nullptr};
     std::unique_ptr<Utils::Texture> mouse_sprite{nullptr};

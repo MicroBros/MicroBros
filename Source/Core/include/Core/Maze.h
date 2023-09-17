@@ -13,6 +13,15 @@
 namespace Core
 {
 
+//! The various directions the Mouse will face in the Maze
+enum class Direction : uint8_t
+{
+    Up,
+    Down,
+    Left,
+    Right
+};
+
 // clang-format off
 /*! \brief Bitflags to hold the state of individual maze tiles
  *

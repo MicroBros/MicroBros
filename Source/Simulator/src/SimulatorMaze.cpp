@@ -1,9 +1,11 @@
-#include "SimulatorMaze.h"
+#include <fstream>
+#include <stdexcept>
 
 #include <fmt/format.h>
 
-#include <fstream>
-#include <stdexcept>
+#include <Core/Algorithm.h>
+
+#include "SimulatorMaze.h"
 
 using namespace Core;
 
@@ -109,6 +111,20 @@ void SimulatorMaze::Reset()
 {
     running = false;
     mouse->Reset();
+
+    // Check if a algorithm has been set
+    if (!algorithm.has_value())
+        throw std::runtime_error("No algorithm has been selected");
+
+    // Find the algorithm constructor
+    auto registry{Core::AlgorithmRegistry::GetRegistry()};
+    auto algorithm_constructor{registry.find(algorithm.value())};
+    if (algorithm_constructor == registry.end())
+        throw std::runtime_error(
+            fmt::format("Algorithm \"{}\" was not found in AlgorithmRegistry!", algorithm.value()));
+
+    // Set the algorithm
+    mouse->SetAlgorithm(std::unique_ptr<Algorithm>(algorithm_constructor->second()));
 }
 
 // Drawing

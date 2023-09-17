@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -29,7 +30,8 @@ public:
     // Simulation
     void Step();
     void Reset();
-    inline void SetRunning(bool val) { running = val; };
+    inline void SetAlgorithm(std::optional<std::string> value) { algorithm = value; };
+    inline void SetRunning(bool value) { running = value; };
     inline void ToggleRunning() { running = !running; };
     inline float &Speed() { return speed; }
 
@@ -42,6 +44,7 @@ public:
     inline bool IsRunning() { return running; }
 
 private:
+    std::optional<std::string> algorithm{std::nullopt};
     std::unique_ptr<Core::Maze> maze{nullptr};
     std::unique_ptr<Core::Mouse> mouse{nullptr};
     int width, height;

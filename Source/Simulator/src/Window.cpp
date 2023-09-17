@@ -1,10 +1,13 @@
 #include "Window.h"
 
+#include <algorithm>
+#include <filesystem>
+#include <iostream>
+
 #include <fmt/format.h>
 #include <nfd.h>
 
-#include <filesystem>
-#include <iostream>
+#include <Core/Algorithm.h>
 
 namespace Simulator
 {
@@ -56,6 +59,19 @@ Window::Window(std::string executable)
     // Init OpenGL backend for imgui
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
+
+    // Load algorithms
+    auto &registry{Core::AlgorithmRegistry::GetRegistry()};
+    for (auto &algorithm : registry)
+    {
+        algorithms.push_back(algorithm.first);
+    }
+
+    // Check if any algorithms were registered
+    if (algorithms.empty())
+        Error("No algorithms registered, simulator wont work!");
+
+    std::sort(algorithms.begin(), algorithms.end());
 }
 
 // Main event-loop
@@ -158,20 +174,40 @@ void Window::DrawMazeWindow()
     maze->Draw(mouse_sprite.get());
     ImGui::End();
 
-    ImGui::SetNextWindowSize(ImVec2(200.0f, 600.0f));
+    ImGui::SetNextWindowSize(ImVec2(250.0f, 600.0f));
     ImGui::Begin("Simulator", NULL, ImGuiWindowFlags_NoResize);
+
+    // Mouse
+    ImGui::SeparatorText("Mouse");
+    if (ImGui::Button(maze->IsRunning() ? "Pause" : "Start")) // F6 : F5
+        maze->ToggleRunning();
+    ImGui::SameLine();
+    if (ImGui::Button("Step")) // F10
+        maze->Step();
+    ImGui::SameLine();
+    if (ImGui::Button("Reset")) // Shift+F5
+        maze->Reset();
+    if (!algorithms.empty())
+    {
+        if (ImGui::BeginCombo("Algorithm", algorithms[algorithm].c_str(), ImGuiComboFlags_None))
+        {
+            for (size_t i{0}; i < algorithms.size(); i++)
+            {
+                bool selected{i == algorithm};
+                if (ImGui::Selectable(algorithms[i].c_str(), selected))
+                {
+                    algorithm = i;
+                    // Update maze
+                    if (maze)
+                        maze->SetAlgorithm(algorithms[i]);
+                }
+            }
+            ImGui::EndCombo();
+        }
+    }
 
     // Simulation
     ImGui::SeparatorText("Simulation");
-    if (ImGui::Button("Step")) // F10
-        maze->Step();
-    if (ImGui::Button("Reset")) // Shift+F5
-        maze->Reset();
-
-    // Run
-    ImGui::SeparatorText("Run");
-    if (ImGui::Button(maze->IsRunning() ? "Pause" : "Start")) // F6 : F5
-        maze->ToggleRunning();
     ImGui::DragFloat("Cycles/s", &maze->Speed(), 0.1f, 0.0f, 20.0f);
 
     ImGui::End();
@@ -200,10 +236,14 @@ void Window::OpenMaze(std::string path)
     try
     {
         maze = std::make_unique<SimulatorMaze>(path);
+        if (!algorithms.empty())
+            maze->SetAlgorithm(algorithms[algorithm]);
+        maze->Reset();
     }
     catch (const std::exception &e)
     {
         Error(e.what());
+        maze = nullptr;
     }
 }
 
