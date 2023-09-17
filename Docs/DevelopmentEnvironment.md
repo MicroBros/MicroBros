@@ -38,6 +38,7 @@ NOTE: On Windows there seems to be issues building the Simulator with GCC, if th
 As per now, only Visual Studio Code is being actively used.
 
 The following extensions are recommended to install:
+- `EditorConfig.EditorConfig` (.editorconfig integration)
 - `ms-vscode.cpptools` (C/C++ integration)
 - `ms-vscode.cmake-tools` (VSCode CMake integration)
 - `twxs.cmake` (CMake syntax highlighting)
