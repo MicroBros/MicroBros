@@ -153,6 +153,12 @@ void SimulatorMaze::Reset()
 
     // Set the algorithm
     mouse->SetAlgorithm(std::unique_ptr<Algorithm>(algorithm_constructor->second()));
+
+    // Set up the default walls
+    // Add the back wall if start is at 0,0
+    MazeTile &mouse_tile{mouse->GetMaze()->GetTile(0, 0)};
+    if (mouse_tile.Contains(MazeTile::Start))
+        mouse_tile |= MazeTile::Down;
 }
 
 // Drawing
@@ -259,8 +265,8 @@ void SimulatorMaze::Draw(Utils::Texture *mouse_sprite)
     }
 
     // Draw mouse
-    int x{0};
-    int y{height - 1};
+    float x{mouse->X()};
+    float y{height - 1 - mouse->Y()};
 
     draw_list->AddImage((ImTextureID)mouse_sprite->Tex(),
                         pos + ImVec2(per * x, per * y) + ImVec2(3, 3),

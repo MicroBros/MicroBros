@@ -11,7 +11,7 @@ Mouse::Mouse(int width, int height, bool initialize_tiles)
     if (initialize_tiles && width == 16 && height == 16)
     {
         // Set the start tile
-        maze->GetTile(0, 0) |= MazeTile::Start;
+        maze->GetTile(0, 0) |= MazeTile::Start | MazeTile::Down;
 
         // Add the goal tiles
         maze->GetTile(7, 7) |= MazeTile::Goal;
