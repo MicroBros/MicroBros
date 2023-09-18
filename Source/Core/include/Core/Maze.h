@@ -17,9 +17,9 @@ namespace Core
 enum class Direction : uint8_t
 {
     Up,
+    Right,
     Down,
     Left,
-    Right
 };
 
 // clang-format off
@@ -29,10 +29,10 @@ enum class Direction : uint8_t
  */
 BITFLAGS_BEGIN(MazeTile, uint8_t)
     // Sides of maze walls present
-    Top = 1 << 0,
-    Bottom = 1 << 1,
-    Left = 1 << 2,
-    Right = 1 << 3,
+    Up = 1 << 0,
+    Right = 1 << 1,
+    Down = 1 << 2,
+    Left = 1 << 3,
 
     // Various special tiles
     Start = 1 << 6,
@@ -53,13 +53,16 @@ public:
     //! Reset the walls of the maze
     void ResetWalls();
 
+    //! Check if a tile has a wall to the side
+    bool HasWall(int x, int y, Direction direction);
+
     //! Get a single MazeTile at the x, y position
     inline MazeTile &GetTile(int x, int y)
     {
 #ifndef FIRMWARE
-        if (x >= width)
+        if (x >= width || x < 0)
             throw std::out_of_range(fmt::format("GetTile x {} out of range {} width", x, width));
-        if (y >= height)
+        if (y >= height || y < 0)
             throw std::out_of_range(fmt::format("GetTile y {} out of range {} height", y, height));
 #endif
 

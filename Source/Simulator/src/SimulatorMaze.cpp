@@ -12,6 +12,34 @@ using namespace Core;
 namespace Simulator
 {
 
+//! Enum with a wall is present
+enum class WallPresent : uint8_t
+{
+    No = 0,
+    Simulator,
+    Mouse,
+};
+
+//! Check both the Mouse Maze and SimulatorMaze if a wall is present (WalLPresent)
+WallPresent CheckWalls(Maze *mouse_maze, Maze *simulator_maze, int x, int y, Direction direction)
+{
+    if (mouse_maze->HasWall(x, y, direction))
+    {
+        return WallPresent::Mouse;
+    }
+    else if (simulator_maze->HasWall(x, y, direction))
+    {
+        return WallPresent::Simulator;
+    }
+
+    return WallPresent::No;
+}
+
+inline ImColor WallColor(WallPresent present) noexcept
+{
+    return present == WallPresent::Mouse ? ImColor(200, 0, 0) : ImColor(80, 80, 80);
+}
+
 SimulatorMaze::SimulatorMaze(int width, int height)
     : width{width}, height{height}, maze{std::make_unique<Maze>(width, height)},
       mouse{std::make_unique<Mouse>(width, height)}
@@ -63,8 +91,8 @@ SimulatorMaze::SimulatorMaze(std::string path)
         tile = tile | dir;
 
             // Get the different wall directions
-            CHECK_DIRECTION(MazeTile::Top, (x * 4) + 2, y * 2)
-            CHECK_DIRECTION(MazeTile::Bottom, (x * 4) + 2, (y * 2) + 2)
+            CHECK_DIRECTION(MazeTile::Up, (x * 4) + 2, y * 2)
+            CHECK_DIRECTION(MazeTile::Down, (x * 4) + 2, (y * 2) + 2)
             CHECK_DIRECTION(MazeTile::Left, x * 4, (y * 2) + 1)
             CHECK_DIRECTION(MazeTile::Right, (x * 4) + 4, (y * 2) + 1)
 
@@ -151,11 +179,14 @@ void SimulatorMaze::Draw(Utils::Texture *mouse_sprite)
     {
         for (int x{0}; x < (width + 1); ++x)
         {
+            // It is rendering top-left as 0,0. but the maze uses
+            // bottom-left as 0,0. Correct for it by inverting the y
+            int maze_y{height - y - 1};
+
+            // Ignore the extra height/width used for corners
             if (!(x >= width || y >= height))
             {
-                // It is rendering top-left as 0,0. but the maze uses bottom-left as 0,0.
-                // Correct for it by inverting the y
-                MazeTile &tile{maze->GetTile(x, height - y - 1)};
+                MazeTile &tile{maze->GetTile(x, maze_y)};
 
                 // Draw the goals
                 if (tile.Contains(MazeTile::Goal))
@@ -171,34 +202,52 @@ void SimulatorMaze::Draw(Utils::Texture *mouse_sprite)
                                              ImColor(100, 20, 20));
                 }
 
-                // Draw the walls
-                if (tile.Contains(MazeTile::Top))
-                {
-                    draw_list->AddRectFilled(pos + ImVec2(per * x + BORDER_THICKNESS, per * y),
-                                             pos +
-                                                 ImVec2(per * (x + 1), per * y + BORDER_THICKNESS),
-                                             ImColor(200, 0, 0));
-                }
-                if (tile.Contains(MazeTile::Bottom))
-                {
-                    draw_list->AddRectFilled(
-                        pos + ImVec2(per * x + BORDER_THICKNESS, per * (y + 1)),
-                        pos + ImVec2(per * (x + 1), per * (y + 1) + BORDER_THICKNESS),
-                        ImColor(200, 0, 0));
-                }
-                if (tile.Contains(MazeTile::Left))
-                {
-                    draw_list->AddRectFilled(pos + ImVec2(per * x, per * y + BORDER_THICKNESS),
-                                             pos +
-                                                 ImVec2(per * x + BORDER_THICKNESS, per * (y + 1)),
-                                             ImColor(200, 0, 0));
-                }
-                if (tile.Contains(MazeTile::Right))
+                WallPresent wall_right{
+                    CheckWalls(mouse->GetMaze(), maze.get(), x, maze_y, Direction::Right)};
+                if (wall_right != WallPresent::No)
                 {
                     draw_list->AddRectFilled(
                         pos + ImVec2(per * (x + 1), per * y + BORDER_THICKNESS),
                         pos + ImVec2(per * (x + 1) + BORDER_THICKNESS, per * (y + 1)),
-                        ImColor(200, 0, 0));
+                        WallColor(wall_right));
+                }
+
+                WallPresent wall_up{
+                    CheckWalls(mouse->GetMaze(), maze.get(), x, maze_y, Direction::Up)};
+                if (wall_up != WallPresent::No)
+                {
+                    draw_list->AddRectFilled(pos + ImVec2(per * x + BORDER_THICKNESS, per * y),
+                                             pos +
+                                                 ImVec2(per * (x + 1), per * y + BORDER_THICKNESS),
+                                             WallColor(wall_up));
+                }
+
+                if (x == 0)
+                {
+                    WallPresent wall_left{
+                        CheckWalls(mouse->GetMaze(), maze.get(), x, maze_y, Direction::Left)};
+
+                    if (wall_left != WallPresent::No)
+                    {
+                        draw_list->AddRectFilled(
+                            pos + ImVec2(per * x, per * y + BORDER_THICKNESS),
+                            pos + ImVec2(per * x + BORDER_THICKNESS, per * (y + 1)),
+                            WallColor(wall_left));
+                    }
+                }
+
+                if (maze_y == 0)
+                {
+                    WallPresent wall_down{
+                        CheckWalls(mouse->GetMaze(), maze.get(), x, maze_y, Direction::Down)};
+
+                    if (wall_down != WallPresent::No)
+                    {
+                        draw_list->AddRectFilled(
+                            pos + ImVec2(per * x + BORDER_THICKNESS, per * (y + 1)),
+                            pos + ImVec2(per * (x + 1), per * (y + 1) + BORDER_THICKNESS),
+                            WallColor(wall_down));
+                    }
                 }
             }
 
