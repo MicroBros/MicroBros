@@ -9,7 +9,7 @@
     "cmake.loadCompileCommands": true,
     "C_Cpp.autoAddFileAssociations": false,
     "dotnet.defaultSolution": "disable",
-    "lldb.showDisassembly": "auto",
     "lldb.dereferencePointers": true,
     "lldb.consoleMode": "commands",
+    "lldb.displayFormat": "auto",
 }

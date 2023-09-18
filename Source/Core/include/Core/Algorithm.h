@@ -2,7 +2,10 @@
 
 #include <functional>
 #include <map>
+#include <optional>
 #include <string>
+
+#include "Maze.h"
 
 namespace Core
 {
@@ -14,6 +17,11 @@ namespace Core
  */
 class Algorithm
 {
+public:
+    virtual ~Algorithm() = default;
+
+    //! Run a step with the Algorithm and get the direction relative to maze the mouse should move
+    virtual std::optional<Direction> Step(Maze *maze, int x, int y, Direction direction) = 0;
 };
 
 /*! \brief Registry class for algorithms
@@ -23,7 +31,7 @@ class Algorithm
 class AlgorithmRegistry
 {
 public:
-    using AlgorithmConstructor = std::function<Algorithm *()>;
+    using AlgorithmConstructor = std::function<Algorithm *(int x, int y)>;
     using Registry = std::unordered_map<std::string, AlgorithmConstructor>;
 
     //! Algorithm registration function, used internally by REGISTER_ALGORITHM macro
@@ -37,5 +45,5 @@ public:
 
 // Add register macro for algorithms
 #define REGISTER_ALGORITHM(ALGORITHM)                                                              \
-    bool ALGORITHM##Algorithm =                                                                    \
-        AlgorithmRegistry::Register(#ALGORITHM, []() { return new ALGORITHM(); });
+    bool ALGORITHM##Algorithm = AlgorithmRegistry::Register(                                       \
+        #ALGORITHM, [](int x, int y) -> Algorithm * { return new ALGORITHM(x, y); });

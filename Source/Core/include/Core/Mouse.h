@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <memory>
 
 #include "Algorithm.h"
@@ -26,7 +27,6 @@ public:
 
     //! Reset the state of the mouse
     void Reset();
-
     //! Set the Algorithm the Mouse will use
     inline void SetAlgorithm(std::unique_ptr<Algorithm> value) noexcept
     {
@@ -34,6 +34,8 @@ public:
     }
 
     /* Getters */
+    //! Get the Algorithm for the Mouse
+    inline Algorithm *GetAlgorithm() noexcept { return algorithm.get(); }
     //! Get the Maze for the Mouse
     inline Maze *GetMaze() noexcept { return maze.get(); }
     //! Get the X-position aligned to middle of tile
@@ -42,6 +44,15 @@ public:
     inline float Y() noexcept { return y; }
     //! Get the rotation, 0.0 is upwards/north relative to maze
     inline float Rot() noexcept { return rot; }
+    //! Get the closest direction based on rotation
+    inline Direction GetDirection() noexcept { return Direction::FromRot(Rot()); }
+    //! Temporarily function to set position, used by Simulator
+    inline void SetPosition(float x_val, float y_val, float rot_val) noexcept
+    {
+        x = x_val;
+        y = y_val;
+        rot = rot_val;
+    }
 
 private:
     std::unique_ptr<Algorithm> algorithm{nullptr};

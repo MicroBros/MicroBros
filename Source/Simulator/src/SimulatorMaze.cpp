@@ -1,3 +1,4 @@
+#include <cmath>
 #include <fstream>
 #include <stdexcept>
 
@@ -133,7 +134,96 @@ SimulatorMaze::SimulatorMaze(std::string path)
 }
 
 // Simulation
-void SimulatorMaze::Step() {}
+void SimulatorMaze::Step()
+{
+    // Get the absolute x, y the mouse is in
+    int x{(int)std::round(mouse->X())};
+    int y{(int)std::round(mouse->Y())};
+    auto &tile{maze->GetTile(x, y)};
+
+    // Find the global front, left and right directions of the Mouse
+    Core::Direction front_direction{mouse->GetDirection()};
+    Core::Direction left_direction{front_direction.TurnLeft()};
+    Core::Direction right_direction{front_direction.TurnRight()};
+
+    // Trace the three local sensor directions and add the walls
+    TraceTile(front_direction, x, y) |= front_direction.TileSide();
+    TraceTile(left_direction, x, y) |= left_direction.TileSide();
+    TraceTile(right_direction, x, y) |= right_direction.TileSide();
+
+    // Step the algorithm
+    auto move_direction{mouse->GetAlgorithm()->Step(maze.get(), x, y, front_direction)};
+    if (!move_direction.has_value())
+        return fmt::println("No move direction returned by Algorithm!");
+    Core::Direction direction{move_direction.value()};
+
+    // Check if crashed
+    if (tile.Contains(direction.TileSide()))
+        throw std::runtime_error(fmt::format("CRASH, direction: {}", direction.ToString()));
+
+    // Update the position
+    switch (direction.Value())
+    {
+    case Core::Direction::Up:
+        y++;
+        break;
+    case Core::Direction::Right:
+        x++;
+        break;
+    case Core::Direction::Down:
+        y--;
+        break;
+    case Core::Direction::Left:
+        x--;
+        break;
+    }
+
+    mouse->SetPosition(x, y, static_cast<Core::Direction::ValueType>(direction.Value()) * 90.0);
+}
+
+Core::MazeTile &SimulatorMaze::TraceTile(Core::Direction direction, int x, int y)
+{
+    switch (direction.Value())
+    {
+    case Core::Direction::Up:
+        while (height > y)
+        {
+            if (maze->GetTile(x, y).Contains(MazeTile::Up))
+                return mouse->GetMaze()->GetTile(x, y);
+            y++;
+        }
+        break;
+    case Core::Direction::Right:
+        while (width > x)
+        {
+            if (maze->GetTile(x, y).Contains(MazeTile::Right))
+                return mouse->GetMaze()->GetTile(x, y);
+            x++;
+        }
+        break;
+    case Core::Direction::Down:
+        while (y >= 0)
+        {
+            if (maze->GetTile(x, y).Contains(MazeTile::Down))
+                return mouse->GetMaze()->GetTile(x, y);
+            y--;
+        }
+        break;
+    case Core::Direction::Left:
+        while (x >= 0)
+        {
+            if (maze->GetTile(x, y).Contains(MazeTile::Left))
+                return mouse->GetMaze()->GetTile(x, y);
+            x--;
+        }
+        break;
+    default:
+        throw std::runtime_error(
+            fmt::format("Invalid TraceTile direction: {}", direction.ToString()));
+    }
+
+    throw std::runtime_error(fmt::format("Maze lacks other wall, ran out at {},{}", x, y));
+}
 
 void SimulatorMaze::Reset()
 {
@@ -152,7 +242,7 @@ void SimulatorMaze::Reset()
             fmt::format("Algorithm \"{}\" was not found in AlgorithmRegistry!", algorithm.value()));
 
     // Set the algorithm
-    mouse->SetAlgorithm(std::unique_ptr<Algorithm>(algorithm_constructor->second()));
+    mouse->SetAlgorithm(std::unique_ptr<Algorithm>(algorithm_constructor->second(width, height)));
 
     // Set up the default walls
     // Add the back wall if start is at 0,0
@@ -268,9 +358,13 @@ void SimulatorMaze::Draw(Utils::Texture *mouse_sprite)
     float x{mouse->X()};
     float y{height - 1 - mouse->Y()};
 
-    draw_list->AddImage((ImTextureID)mouse_sprite->Tex(),
+    /*draw_list->AddImage((ImTextureID)mouse_sprite->Tex(),
                         pos + ImVec2(per * x, per * y) + ImVec2(3, 3),
-                        pos + ImVec2(per * (x + 1), per * (y + 1)) - ImVec2(3, 3));
+                        pos + ImVec2(per * (x + 1), per * (y + 1)) - ImVec2(3, 3));*/
+    mouse_sprite->DrawRotated(
+        pos + ImVec2(per * x, per * y) +
+            ImVec2((per + BORDER_THICKNESS) / 2, (per + BORDER_THICKNESS) / 2),
+        ImVec2(40, 40), mouse->Rot());
 }
 
 } // namespace Simulator

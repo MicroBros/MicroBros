@@ -1,8 +1,9 @@
 #pragma once
 
-#include <SDL.h>
-
 #include <string>
+
+#include <SDL.h>
+#include <imgui.h>
 
 namespace Simulator::Utils
 {
@@ -20,6 +21,8 @@ public:
     inline SDL_Texture *Tex() { return texture; }
     inline int Width() { return width; }
     inline int Height() { return height; }
+
+    void DrawRotated(ImVec2 center, ImVec2 size, float angle);
 
 private:
     SDL_Surface *surface{nullptr};

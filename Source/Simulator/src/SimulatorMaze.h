@@ -34,6 +34,8 @@ public:
     inline void SetRunning(bool value) { running = value; };
     inline void ToggleRunning() { running = !running; };
     inline float &Speed() { return speed; }
+    //! Trace using the SimulatorMaze in the Direction, return the hit MazeTile from the Mouse Maze
+    Core::MazeTile& TraceTile(Core::Direction direction, int x, int y);
 
     // Drawing
     void Draw(Utils::Texture *mouse_sprite);

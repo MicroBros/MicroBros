@@ -3,6 +3,32 @@
 namespace Core
 {
 
+/* Direction */
+Direction Direction::FromRot(float rot)
+{
+    // Divide the rotation and then round it to make it match the indexes of the Direction enum
+    return Direction(static_cast<Direction::ValueEnum>(static_cast<int>(std::round(rot / 90.0)) %
+                                                       Direction::Values));
+}
+
+std::string_view Direction::ToString()
+{
+    switch (direction)
+    {
+    case Core::Direction::Up:
+        return "Up";
+    case Core::Direction::Right:
+        return "Right";
+    case Core::Direction::Down:
+        return "Down";
+    case Core::Direction::Left:
+        return "Left";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+/* Maze */
 Maze::Maze(int width, int height)
     : tiles{std::vector<MazeTile>(width * height)}, width{width}, height{height}
 {
@@ -22,6 +48,7 @@ void Maze::ResetWalls()
 
 bool Maze::HasWall(int x, int y, Direction direction)
 {
+    // Check the tile and adjecent if one of them has had a wall registered
     switch (direction.Value())
     {
     case Direction::Up:
@@ -40,6 +67,8 @@ bool Maze::HasWall(int x, int y, Direction direction)
         return x > 0 ? GetTile(x, y).Contains(MazeTile::Left) ||
                            GetTile(x - 1, y).Contains(MazeTile::Right)
                      : GetTile(x, y).Contains(MazeTile::Left);
+    default:
+        return false;
     }
 }
 

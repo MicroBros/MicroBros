@@ -1,8 +1,11 @@
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include <stdexcept>
+
 #include <fmt/format.h>
+#include <imgui_internal.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
-#include <stdexcept>
 
 #include "Utils.h"
 
@@ -40,6 +43,22 @@ Texture::~Texture()
         SDL_DestroySurface(surface);
     if (data)
         delete data;
+}
+
+// Based on example by ocornut on imgui issuetracker:
+// https://github.com/ocornut/imgui/issues/1982#issuecomment-408834301
+void Texture::DrawRotated(ImVec2 center, ImVec2 size, float angle)
+{
+    float rad{angle * (static_cast<float>(M_PI) / 180)};
+    float cos{std::cos(rad)};
+    float sin{std::sin(rad)};
+
+    ImVec2 pos[4] = {center + ImRotate(ImVec2(-size.x * 0.5f, -size.y * 0.5f), cos, sin),
+                     center + ImRotate(ImVec2(+size.x * 0.5f, -size.y * 0.5f), cos, sin),
+                     center + ImRotate(ImVec2(+size.x * 0.5f, +size.y * 0.5f), cos, sin),
+                     center + ImRotate(ImVec2(-size.x * 0.5f, +size.y * 0.5f), cos, sin)};
+
+    ImGui::GetWindowDrawList()->AddImageQuad((ImTextureID)Tex(), pos[0], pos[1], pos[2], pos[3]);
 }
 
 } // namespace Simulator::Utils

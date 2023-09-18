@@ -8,48 +8,8 @@
 
 #include "Bitflags.h"
 
-#define MAZE_INDEX(x, y) (width * y) + x
-
 namespace Core
 {
-
-//! The various directions the Mouse will face in the Maze
-class Direction
-{
-public:
-    enum ValueEnum : uint8_t
-    {
-        Up = 0,
-        Right = 1,
-        Down = 2,
-        Left = 3,
-    };
-
-    Direction(ValueEnum direction) : direction{direction} {}
-
-    //! Turn the Direction right n times
-    inline Direction TurnRight(int n) noexcept
-    {
-        return static_cast<ValueEnum>((static_cast<int>(direction) + n) % Max);
-    }
-    //! Turn the Direction right 1 time
-    inline Direction TurnRight() noexcept { return TurnRight(1); }
-
-    //! Turn the Direction left n times
-    inline Direction TurnLeft(int n) noexcept
-    {
-        return static_cast<ValueEnum>((static_cast<int>(direction) - n) % Max);
-    }
-    //! Turn the Direction left 1 time
-    inline Direction TurnLeft() noexcept { return TurnLeft(1); }
-
-    //! Get the Enum value of the Direction
-    inline ValueEnum Value() noexcept { return direction; }
-
-private:
-    ValueEnum direction{};
-    const int Max = static_cast<int>(ValueEnum::Left) + 1;
-};
 
 // clang-format off
 /*! \brief Bitflags to hold the state of individual maze tiles
@@ -68,6 +28,64 @@ BITFLAGS_BEGIN(MazeTile, uint8_t)
     Goal = 1 << 7,
 BITFLAGS_END(MazeTile)
 // clang-format on
+
+//! The various directions the Mouse will face in the Maze
+class Direction
+{
+public:
+    using ValueType = uint8_t;
+
+    enum ValueEnum : ValueType
+    {
+        Up = 0,
+        Right = 1,
+        Down = 2,
+        Left = 3,
+    };
+
+    Direction(ValueEnum direction) : direction{direction} {}
+
+    //! Get the closest direction based on rotation in degrees
+    static Direction FromRot(float rot);
+
+    //! Turn the Direction right n times
+    inline Direction TurnRight(int n) noexcept
+    {
+        return static_cast<ValueEnum>((static_cast<int>(direction) + n) % Values);
+    }
+    //! Turn the Direction right 1 time
+    inline Direction TurnRight() noexcept { return TurnRight(1); }
+
+    //! Turn the Direction left n times
+    inline Direction TurnLeft(int n) noexcept
+    {
+        auto temp{(static_cast<int>(direction) - n) % Values};
+        if (temp < 0)
+            temp += Values;
+        return static_cast<ValueEnum>(temp);
+    }
+    //! Turn the Direction left 1 time
+    inline Direction TurnLeft() noexcept { return TurnLeft(1); }
+
+    //! Get the Enum value of the Direction
+    inline ValueEnum Value() noexcept { return direction; }
+
+    //! Get the MazeTile bitflag for the Direction
+    inline MazeTile TileSide() noexcept
+    {
+        // Lookup table to get tile-side
+        static const MazeTile tiles[4] = {MazeTile::Up, MazeTile::Right, MazeTile::Down,
+                                          MazeTile::Left};
+        return tiles[static_cast<int>(direction)];
+    }
+
+    //! Get the string value of the Direction
+    std::string_view ToString();
+
+private:
+    static const ValueType Values = static_cast<ValueType>(ValueEnum::Left) + 1;
+    ValueEnum direction{};
+};
 
 /*! \brief Grid based structure with every MazeTile
  *
@@ -95,7 +113,7 @@ public:
             throw std::out_of_range(fmt::format("GetTile y {} out of range {} height", y, height));
 #endif
 
-        return tiles[MAZE_INDEX(x, y)];
+        return tiles[(width * y) + x];
     }
 
 private:
