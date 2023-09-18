@@ -14,12 +14,41 @@ namespace Core
 {
 
 //! The various directions the Mouse will face in the Maze
-enum class Direction : uint8_t
+class Direction
 {
-    Up,
-    Right,
-    Down,
-    Left,
+public:
+    enum ValueEnum : uint8_t
+    {
+        Up = 0,
+        Right = 1,
+        Down = 2,
+        Left = 3,
+    };
+
+    Direction(ValueEnum direction) : direction{direction} {}
+
+    //! Turn the Direction right n times
+    inline Direction TurnRight(int n) noexcept
+    {
+        return static_cast<ValueEnum>((static_cast<int>(direction) + n) % Max);
+    }
+    //! Turn the Direction right 1 time
+    inline Direction TurnRight() noexcept { return TurnRight(1); }
+
+    //! Turn the Direction left n times
+    inline Direction TurnLeft(int n) noexcept
+    {
+        return static_cast<ValueEnum>((static_cast<int>(direction) - n) % Max);
+    }
+    //! Turn the Direction left 1 time
+    inline Direction TurnLeft() noexcept { return TurnLeft(1); }
+
+    //! Get the Enum value of the Direction
+    inline ValueEnum Value() noexcept { return direction; }
+
+private:
+    ValueEnum direction{};
+    const int Max = static_cast<int>(ValueEnum::Left) + 1;
 };
 
 // clang-format off

@@ -22,7 +22,7 @@ void Maze::ResetWalls()
 
 bool Maze::HasWall(int x, int y, Direction direction)
 {
-    switch (direction)
+    switch (direction.Value())
     {
     case Direction::Up:
         return y >= (height - 1) ? GetTile(x, y).Contains(MazeTile::Up)
