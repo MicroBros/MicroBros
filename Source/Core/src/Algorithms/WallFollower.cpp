@@ -1,3 +1,5 @@
+#include <array>
+
 #include "Core/Algorithm.h"
 
 namespace Core::Algorithms
@@ -15,13 +17,13 @@ public:
     std::optional<Direction> Step(Maze *maze, int x, int y, Direction direction)
     {
         // Get the global back, left and right directions
-        Core::Direction left_direction{direction.TurnLeft()};
-        Core::Direction right_direction{direction.TurnRight()};
-        Core::Direction back_direction{direction.TurnRight(2)};
+        Direction left_direction{direction.TurnLeft()};
+        Direction right_direction{direction.TurnRight()};
+        Direction back_direction{direction.TurnRight(2)};
 
         // The four directions ordered with right, front, left, back
-        std::array<Core::Direction, 4> direction_order{right_direction, direction, left_direction,
-                                                       back_direction};
+        std::array<Direction, 4> direction_order{right_direction, direction, left_direction,
+                                                 back_direction};
 
         // Get the current tile
         auto &tile{maze->GetTile(x, y)};
