@@ -6,6 +6,9 @@ project(MicroBros LANGUAGES ASM C CXX)
 if(CMAKE_BUILD_TYPE STREQUAL "Firmware")
     set(FIRMWARE ON)
     set(CMAKE_BUILD_TYPE "Debug")
+    add_definitions(-DFIRMWARE)
+else()
+    add_definitions(-DSIMULATOR)
 endif()
 
 # Configure C++

@@ -3,10 +3,6 @@ set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR ARM)
 SET(CMAKE_CROSSCOMPILING 1)
 
-# Set FIRMWARE and disable OS in fmt
-add_definitions(-DFIRMWARE)
-set(FMT_OS OFF)
-
 set(PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 include(${PROJECT_ROOT}/ThirdParty/codal/utils/cmake/toolchains/ARM_GCC/compiler-flags.cmake)
 string(REPLACE "-lm" "-lnosys -lm" CMAKE_C_LINK_EXECUTABLE "${CMAKE_C_LINK_EXECUTABLE}")
@@ -95,7 +91,6 @@ list(JOIN CFLAGS " " CFLAGS)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CFLAGS}")
 
 set(CXXFLAGS ${COMMON_FLAGS}
-    -std=c++11
     -fwrapv
     -fno-rtti
     -fno-threadsafe-statics

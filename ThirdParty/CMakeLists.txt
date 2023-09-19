@@ -1,4 +1,8 @@
 # fmt
+if(FIRMWARE)
+    set(FMT_OS OFF)
+endif()
+
 add_subdirectory(fmt EXCLUDE_FROM_ALL)
 add_library(ThirdParty::fmt ALIAS fmt)
 
