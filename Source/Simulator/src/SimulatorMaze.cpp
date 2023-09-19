@@ -136,20 +136,27 @@ SimulatorMaze::SimulatorMaze(std::string path)
 // Simulation
 void SimulatorMaze::Step()
 {
+    // Update the step time
+    last_step = SDL_GetTicks();
+
+    last_x = mouse->X();
+    last_y = mouse->Y();
+    last_rot = mouse->Rot();
+
     // Get the absolute x, y the mouse is in
     int x{(int)std::round(mouse->X())};
     int y{(int)std::round(mouse->Y())};
     auto &tile{maze->GetTile(x, y)};
 
-    // Find the global front, left and right directions of the Mouse
-    Core::Direction front_direction{mouse->GetDirection()};
-    Core::Direction left_direction{front_direction.TurnLeft()};
-    Core::Direction right_direction{front_direction.TurnRight()};
+    // For now just stop when Goal is found
+    if (tile.Contains(MazeTile::Goal))
+        return;
 
-    // Trace the three local sensor directions and add the walls
-    TraceTile(front_direction, x, y) |= front_direction.TileSide();
-    TraceTile(left_direction, x, y) |= left_direction.TileSide();
-    TraceTile(right_direction, x, y) |= right_direction.TileSide();
+    Core::Direction front_direction{mouse->GetDirection()};
+
+    // Trace the walls if at start
+    if (tile.Contains(MazeTile::Start))
+        TraceWalls(front_direction, x, y);
 
     // Step the algorithm
     auto move_direction{mouse->GetAlgorithm()->Step(maze.get(), x, y, front_direction)};
@@ -179,6 +186,9 @@ void SimulatorMaze::Step()
     }
 
     mouse->SetPosition(x, y, static_cast<Core::Direction::ValueType>(direction.Value()) * 90.0);
+
+    // Do a new trace to update fake sensor results
+    TraceWalls(direction, x, y);
 }
 
 Core::MazeTile &SimulatorMaze::TraceTile(Core::Direction direction, int x, int y)
@@ -225,9 +235,22 @@ Core::MazeTile &SimulatorMaze::TraceTile(Core::Direction direction, int x, int y
     throw std::runtime_error(fmt::format("Maze lacks other wall, ran out at {},{}", x, y));
 }
 
+void SimulatorMaze::TraceWalls(Core::Direction front_direction, int x, int y)
+{
+    // Find the global front, left and right directions of the Mouse
+    Core::Direction left_direction{front_direction.TurnLeft()};
+    Core::Direction right_direction{front_direction.TurnRight()};
+
+    // Trace the three local sensor directions and add the walls
+    TraceTile(front_direction, x, y) |= front_direction.TileSide();
+    TraceTile(left_direction, x, y) |= left_direction.TileSide();
+    TraceTile(right_direction, x, y) |= right_direction.TileSide();
+}
+
 void SimulatorMaze::Reset()
 {
     running = false;
+    last_step = 0;
     mouse->Reset();
 
     // Check if a algorithm has been set
@@ -249,6 +272,13 @@ void SimulatorMaze::Reset()
     MazeTile &mouse_tile{mouse->GetMaze()->GetTile(0, 0)};
     if (mouse_tile.Contains(MazeTile::Start))
         mouse_tile |= MazeTile::Down;
+}
+
+void SimulatorMaze::Tick()
+{
+    // Auto-step if running and not already stepping
+    if (IsRunning() && !IsStepping())
+        Step();
 }
 
 // Drawing
@@ -358,13 +388,49 @@ void SimulatorMaze::Draw(Utils::Texture *mouse_sprite)
     float x{mouse->X()};
     float y{height - 1 - mouse->Y()};
 
-    /*draw_list->AddImage((ImTextureID)mouse_sprite->Tex(),
-                        pos + ImVec2(per * x, per * y) + ImVec2(3, 3),
-                        pos + ImVec2(per * (x + 1), per * (y + 1)) - ImVec2(3, 3));*/
-    mouse_sprite->DrawRotated(
-        pos + ImVec2(per * x, per * y) +
-            ImVec2((per + BORDER_THICKNESS) / 2, (per + BORDER_THICKNESS) / 2),
-        ImVec2(40, 40), mouse->Rot());
+    if (IsStepping())
+    {
+        // Calculate the estimated step time in ms
+        float step_time{1.0f / Speed() * 1000.0f};
+        // Calculate the progress between the start of step and end of step (0.0 - 1.0)
+        float progress = ((SDL_GetTicks() - last_step) / ((last_step + step_time) - last_step));
+
+        // Get the top-left, corrected maze y
+        float maze_last_y{height - 1.0f - last_y};
+
+        // Diff the coordinates to find what one needs to move within the step
+        float diff_x{x - last_x};
+        float diff_y{y - maze_last_y};
+
+        // Interpolate
+        float interp_x{last_x + (diff_x * progress)};
+        float interp_y{maze_last_y + (diff_y * progress)};
+        // Based on formula taken from https://stackoverflow.com/a/14498790
+        float interp_rot =
+            last_rot +
+            ((std::fmod((std::fmod((mouse->Rot() - last_rot), 360.0f) + 540.0f), 360.0f) - 180.0f) *
+             std::min(progress * 2, 1.0f));
+
+        // Draw mouse sprite
+        mouse_sprite->DrawRotated(
+            pos + ImVec2(per * interp_x, per * interp_y) +
+                ImVec2((per + BORDER_THICKNESS) / 2, (per + BORDER_THICKNESS) / 2),
+            ImVec2(40, 40), interp_rot);
+    }
+    else
+    {
+        // Draw mouse sprite
+        mouse_sprite->DrawRotated(
+            pos + ImVec2(per * x, per * y) +
+                ImVec2((per + BORDER_THICKNESS) / 2, (per + BORDER_THICKNESS) / 2),
+            ImVec2(40, 40), mouse->Rot());
+    }
+}
+
+bool SimulatorMaze::IsStepping()
+{
+    uint64_t step_time{(uint64_t)(1.0 / Speed() * 1000)};
+    return last_step > SDL_GetTicks() - step_time;
 }
 
 } // namespace Simulator

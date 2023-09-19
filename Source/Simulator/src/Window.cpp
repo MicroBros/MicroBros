@@ -93,6 +93,10 @@ void Window::Run()
                 done = true;
         }
 
+        // Run maze tick
+        if (maze)
+            maze->Tick();
+
         // Draw ImGui
         Draw(done);
     }
@@ -183,7 +187,10 @@ void Window::DrawMazeWindow()
         maze->ToggleRunning();
     ImGui::SameLine();
     if (ImGui::Button("Step")) // F10
+    {
+        maze->SetRunning(false); // Stop running is manually stepping
         maze->Step();
+    }
     ImGui::SameLine();
     if (ImGui::Button("Reset")) // Shift+F5
         maze->Reset();
