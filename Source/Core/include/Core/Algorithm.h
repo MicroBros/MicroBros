@@ -22,6 +22,8 @@ public:
 
     //! Run a step with the Algorithm and get the direction relative to maze the mouse should move
     virtual std::optional<Direction> Step(Maze *maze, int x, int y, Direction direction) = 0;
+    //! Get text for a tile, only used in Simulator
+    virtual std::optional<std::string> GetText(Maze *maze, int x, int y);
 };
 
 /*! \brief Registry class for algorithms

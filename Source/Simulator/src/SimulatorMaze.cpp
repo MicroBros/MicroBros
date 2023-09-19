@@ -375,6 +375,20 @@ void SimulatorMaze::Draw(Utils::Texture *mouse_sprite)
                             WallColor(wall_down));
                     }
                 }
+
+                // Check if the algorithm has text for the tile
+                auto text{mouse->GetAlgorithm()->GetText(mouse->GetMaze(), x, maze_y)};
+                if (text.has_value())
+                {
+                    auto text_cstr{text.value().c_str()};
+                    auto text_size = ImGui::CalcTextSize(text_cstr);
+
+                    draw_list->AddText(
+                        pos + ImVec2(per * x, per * y) +
+                            ImVec2((per + BORDER_THICKNESS) / 2, (per + BORDER_THICKNESS) / 2) -
+                            (text_size / 2),
+                        ImColor(255, 255, 255), text_cstr);
+                }
             }
 
             // Draw the corners of every tile

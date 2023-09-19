@@ -4,6 +4,7 @@ add_library(Core OBJECT
     src/Mouse.cpp
     # Algorithms
     src/Algorithms/WallFollower.cpp
+    src/Algorithms/WallFollower2.cpp
 )
 target_include_directories(Core PUBLIC include/)
 
