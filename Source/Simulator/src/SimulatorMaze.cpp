@@ -13,7 +13,7 @@ using namespace Core;
 namespace Simulator
 {
 
-//! Enum with a wall is present
+//! Enum defining if a wall is present checking the Simulator and Mouse mazes
 enum class WallPresent : uint8_t
 {
     No = 0,
@@ -36,6 +36,7 @@ WallPresent CheckWalls(Maze *mouse_maze, Maze *simulator_maze, int x, int y, Dir
     return WallPresent::No;
 }
 
+//! Get the wall color for the kind of wall present
 inline ImColor WallColor(WallPresent present) noexcept
 {
     return present == WallPresent::Mouse ? ImColor(200, 0, 0) : ImColor(80, 80, 80);

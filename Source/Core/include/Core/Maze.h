@@ -99,10 +99,8 @@ public:
 
     //! Reset the walls of the maze
     void ResetWalls();
-
     //! Check if a tile has a wall to the side
     bool HasWall(int x, int y, Direction direction);
-
     //! Get a single MazeTile at the x, y position
     inline MazeTile &GetTile(int x, int y)
     {

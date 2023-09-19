@@ -24,31 +24,40 @@ namespace Simulator
 class SimulatorMaze
 {
 public:
+    //! Create an empty SimulatorMaze of width and height
     SimulatorMaze(int width, int height);
+    //! Create a SimulatorMaze with mazefile loaded from path
     explicit SimulatorMaze(std::string path);
 
-    // Simulation
+    //! Run a single step with the Simulator
     void Step();
+    //! Reset the state of SimulatorMaze and Mouse
     void Reset();
+    //! Tick ran by Simulator, this is what calls Step when the Simulator is running
     void Tick();
+    //! Set the name of the Algorithm which will be used on Reset
     inline void SetAlgorithm(std::optional<std::string> value) { algorithm = value; };
+    //! Set if the Simulator should be running (auto-step)
     inline void SetRunning(bool value) { running = value; };
+    //! Toogle if the Simulator should be running
     inline void ToggleRunning() { running = !running; };
-
     //! Trace using the SimulatorMaze in the Direction, return the hit MazeTile from the Mouse Maze
     Core::MazeTile& TraceTile(Core::Direction direction, int x, int y);
     //! Trace the 3 direction the MicroMouse can see and add it to the Mouse Maze
     void TraceWalls(Core::Direction front_direction, int x, int y);
-
-    // Drawing
+    //! Draw the maze using the mouse_sprite Texture
     void Draw(Utils::Texture *mouse_sprite);
-
-    // Getters
+    //! Get the width of the Maze
     inline int Width() { return width; }
+    //! Get the height of the Maze
     inline int Height() { return height; }
+    //! Get if the simulation is running
     inline bool IsRunning() { return running; }
+    //! Get if the simulation is current interpolating a step
     bool IsStepping();
+    //! Get the speed in steps per second
     inline float &Speed() { return speed; }
+
 private:
     uint64_t last_step{0};
     float last_x{0.0};

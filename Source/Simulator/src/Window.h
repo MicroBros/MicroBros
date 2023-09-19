@@ -23,16 +23,25 @@ namespace Simulator
 class Window
 {
 public:
+    //! Open a window, pass absolute path to the executable launched
     Window(std::string executable);
     ~Window();
+
+    //! Open and load the Maze and setup SimulatorMaze based on path
     void OpenMaze(std::string path);
+    //! Run the Window event-loop blocking until closed
     void Run();
 
 private:
+    //! Draw the imgui UI
     void Draw(bool &done);
+    //! Draw the top menu bar
     void DrawMenuBar(bool &done);
+    //! Draw the imgui window displaying the Maze
     void DrawMazeWindow();
+    //! Open the file picker to open a mazefile
     void OpenMaze();
+    //! Show an error modal with error message
     void Error(std::string err);
 
     float dpi{1.0f};

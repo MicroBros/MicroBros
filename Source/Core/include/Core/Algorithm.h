@@ -38,7 +38,6 @@ public:
 
     //! Algorithm registration function, used internally by REGISTER_ALGORITHM macro
     static bool Register(const std::string &name, AlgorithmConstructor constructor);
-
     //! Access the registry of Algorithm registrated
     static Registry &GetRegistry();
 };

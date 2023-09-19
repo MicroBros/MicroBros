@@ -32,8 +32,6 @@ public:
     {
         algorithm = std::move(value);
     }
-
-    /* Getters */
     //! Get the Algorithm for the Mouse
     inline Algorithm *GetAlgorithm() noexcept { return algorithm.get(); }
     //! Get the Maze for the Mouse
