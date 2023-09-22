@@ -7,11 +7,17 @@ set(PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 include(${PROJECT_ROOT}/ThirdParty/codal/utils/cmake/toolchains/ARM_GCC/compiler-flags.cmake)
 string(REPLACE "-lm" "-lnosys -lm" CMAKE_C_LINK_EXECUTABLE "${CMAKE_C_LINK_EXECUTABLE}")
 
+# More sane debug options than upstream CODAL
+set(CMAKE_C_FLAGS_DEBUG_INIT "-g -Os -gdwarf-4")
+set(CMAKE_CXX_FLAGS_DEBUG_INIT ${CMAKE_C_FLAGS_DEBUG_INIT})
+set(CMAKE_ASM_FLAGS_DEBUG_INIT ${CMAKE_C_FLAGS_DEBUG_INIT})
+
 find_program(ARM_NONE_EABI_AR arm-none-eabi-ar)
 find_program(ARM_NONE_EABI_GCC arm-none-eabi-gcc)
 find_program(ARM_NONE_EABI_GXX arm-none-eabi-g++)
 find_program(ARM_NONE_EABI_OBJCOPY arm-none-eabi-objcopy)
 find_program(ARM_NONE_EABI_RANLIB arm-none-eabi-ranlib)
+find_program(ARM_NONE_EABI_SIZE arm-none-eabi-size)
 
 # Setup toolchain and target compilers
 set(TOOLCHAIN arm-none-eabi)
@@ -121,7 +127,7 @@ list(JOIN LINKER_FLAGS " " LINKER_FLAGS)
 set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
-set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -T${PROJECT_ROOT}/ThirdParty/codal-microbit-v2/ld/nrf52833-softdevice.ld")
+set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -T${PROJECT_ROOT}/ThirdParty/codal-microbit-v2/ld/nrf52833-softdevice.ld -Wl,--print-memory-usage")
 
 function(microbit_executable TARGET)
     target_link_libraries(${TARGET} PUBLIC ThirdParty::codal-microbit-v2)
@@ -130,11 +136,16 @@ function(microbit_executable TARGET)
         -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.map
     )
 
+    # Print sizes used
     add_custom_command(TARGET ${TARGET} POST_BUILD
-        COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${TARGET}> ${TARGET}.bin
+        COMMAND ${ARM_NONE_EABI_SIZE} -G $<TARGET_FILE:${TARGET}>
     VERBATIM)
 
-    add_custom_command(TARGET ${TARGET} POST_BUILD
-        COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${TARGET}> ${TARGET}.hex
-    VERBATIM)
+    # Unused
+    #add_custom_command(TARGET ${TARGET} POST_BUILD
+    #    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${TARGET}> ${TARGET}.bin
+    #VERBATIM)
+    #add_custom_command(TARGET ${TARGET} POST_BUILD
+    #    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${TARGET}> ${TARGET}.hex
+    #VERBATIM)
 endfunction()

@@ -34,7 +34,10 @@
             "inherits": "base",
             "toolchainFile": "${sourceDir}/Source/Firmware/toolchain.cmake",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Firmware"
+                "CMAKE_BUILD_TYPE": "Debug"
+            },
+            "environment": {
+                "BUILD_FIRMWARE": "Y"
             }
         }
     ]

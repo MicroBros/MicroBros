@@ -10,6 +10,18 @@
                 "${workspaceFolder}/Data/mazefiles/classic/japan2019.txt"
             ],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "cortex-debug",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build Firmware",
+            "executable": "${workspaceFolder}/build/Firmware/Source/Firmware/Firmware.elf",
+            "name": "Debug (PyOCD)",
+            "request": "launch",
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "none",
+            "servertype": "pyocd",
+            "targetId": "nrf52833"
         }
     ]
 }

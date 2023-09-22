@@ -43,9 +43,11 @@ The following extensions are recommended to install:
 - `ms-vscode.cmake-tools` (VSCode CMake integration)
 - `twxs.cmake` (CMake syntax highlighting)
 - `vadimcn.vscode-lldb` (Natibe debugger using LLDB from LLVM)
+- `marus25.cortex-debug` (Automatic setup of PyOCD for upload and debugging)
 
 ## Flashing firmware
 Using pyocd one can flash the firmware to the micro:bit v2.
+The Firmware can be built as the Firmware target under the Firmware CMake preset
 
 If you are missing pyocd, it can be installed (after installing Python 3) by:
 ```
@@ -54,5 +56,11 @@ pip install -U pyocd
 
 After this one can flash the firmware after building the `Firmware` target in the `Firmware` preset by running
 ```
-pyocd load --target nrf52833 build/Firmware/Source/Firmware/Firmware.hex
+pyocd load --target nrf52833 build/Firmware/Source/Firmware/Firmware.elf
 ```
+
+## Debugging firmware
+- Select Debug (PyOCD) as Debug launch target
+- Change CMake configure preset to Firmware
+- Set the default Build target to Firmware
+- Press F5, after Firmware is built, switch to gdb-server Terminal to see PyOCD uploading

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.26)
 # Init project
 project(MicroBros LANGUAGES ASM C CXX)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Firmware")
+if(DEFINED ENV{BUILD_FIRMWARE})
     set(FIRMWARE ON)
     set(CMAKE_BUILD_TYPE "Debug")
     add_definitions(-DFIRMWARE)
