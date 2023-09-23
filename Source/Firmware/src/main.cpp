@@ -1,20 +1,42 @@
 #include <MicroBit.h>
 
-const char *const heart =
-    "000,255,000,255,000\n"
-    "255,255,255,255,255\n"
-    "255,255,255,255,255\n"
-    "000,255,255,255,000\n"
-    "000,000,255,000,000\n";
-static const MicroBitImage HEART(heart);
+#include "Drivers/DFR0548.h"
 
 MicroBit uBit;
 
 int main()
 {
-    while (true)
+    // Creae the DFR0548 motor driver
+    Firmware::Drivers::DFR0548 dfr0548{uBit.i2c};
+
+    while (1)
     {
-        uBit.display.print(HEART);
+
+        dfr0548.SetMotors(4095, 4095, 4095, 4095);
+        uBit.sleep(2000);
+
+        dfr0548.SetMotors(-4095, -4095, -4095, -4095);
+        uBit.sleep(2000);
+
+        // Left-back
+        dfr0548.SetMotors(4095, 0, 0, 0);
+        uBit.sleep(2000);
+
+        // Left-front
+        dfr0548.SetMotors(0, 4095, 0, 0);
+        uBit.sleep(2000);
+
+        // Right-back
+        dfr0548.SetMotors(0, 0, 4095, 0);
+        uBit.sleep(2000);
+
+        // Right-front
+        dfr0548.SetMotors(0, 0, 0, 4095);
+        uBit.sleep(2000);
+
+        // Stop the motors for 8 sec
+        dfr0548.SetMotors(0, 0, 0, 0);
+        uBit.sleep(8000);
     }
 
     return 0;
