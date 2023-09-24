@@ -1,7 +1,5 @@
 #include "Core/Algorithm.h"
 
-#include <iostream>
-
 namespace Core
 {
 

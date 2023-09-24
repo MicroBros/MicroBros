@@ -4,7 +4,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug",
+            "name": "Debug (LLDB)",
             "program": "${command:cmake.launchTargetPath}",
             "args": [
                 "${workspaceFolder}/Data/mazefiles/classic/japan2019.txt"
