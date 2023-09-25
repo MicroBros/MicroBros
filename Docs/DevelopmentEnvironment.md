@@ -54,6 +54,11 @@ If you are missing pyocd, it can be installed (after installing Python 3) by:
 pip install -U pyocd
 ```
 
+One can completely erase the flash like this if needed
+```
+pyocd erase --mass --t nrf52833
+```
+
 After this one can flash the firmware after building the `Firmware` target in the `Firmware` preset by running
 ```
 pyocd load --target nrf52833 build/Firmware/Source/Firmware/Firmware.elf
