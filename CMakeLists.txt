@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.26)
 # Init project
 project(MicroBros LANGUAGES ASM C CXX)
 
-set(FIRMWARE ON CACHE BOOL "Using Firmware targets")
+set(FIRMWARE OFF CACHE BOOL "Using Firmware targets")
 if(FIRMWARE)
     set(CMAKE_BUILD_TYPE "Debug")
     add_definitions(-DFIRMWARE)
