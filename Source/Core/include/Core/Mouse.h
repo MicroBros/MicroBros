@@ -40,19 +40,19 @@ public:
     inline float X() noexcept { return x; }
     //! Get the Y-position aligned to middle of tile
     inline float Y() noexcept { return y; }
-    //! Get the rotation, 0.0 is upwards/north relative to maze
+    //! Get the rotation, 0.0 is upwards/north relative to maze, degrees
     inline float Rot() noexcept { return rot; }
     //! Get the closest direction based on rotation
     inline Direction GetDirection() noexcept { return Direction::FromRot(Rot()); }
     //! Temporarily function to set position, used by Simulator
-    inline void SetPosition(float x_val, float y_val, float rot_val) noexcept
+    inline void SetPosition(float x, float y, float rot) noexcept
     {
-        x = x_val;
-        y = y_val;
-        rot = rot_val;
+        this->x = x;
+        this->y = y;
+        this->rot = rot;
     }
 
-private:
+protected:
     std::unique_ptr<Algorithm> algorithm{nullptr};
     std::unique_ptr<Maze> maze{nullptr};
     float x{0.0};

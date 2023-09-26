@@ -6,6 +6,8 @@
 
 #include <Core/Bitflags.h>
 
+#include "../Utils.h"
+
 namespace Firmware::Drivers
 {
 

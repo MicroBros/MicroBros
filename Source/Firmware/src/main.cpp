@@ -1,6 +1,7 @@
 #include <MicroBit.h>
 
 #include "Drivers/DFR0548.h"
+#include "Mouse.h"
 
 MicroBit uBit;
 
