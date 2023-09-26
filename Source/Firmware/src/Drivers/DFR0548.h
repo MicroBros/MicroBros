@@ -63,13 +63,13 @@ public:
         AI = 1 << 5,
         //! Enable lower power moed (Oscillator off)
         SLEEP = 1 << 4,
-        //! Do not respond to I2C subaddress 1
+        //! Do respond to I2C subaddress 1
         SUB1 = 1 << 3,
-        //! Do not respond to I2C subaddress 2
+        //! Do respond to I2C subaddress 2
         SUB2 = 1 << 2,
-        //! Do not respond to I2C subaddress 3
+        //! Do respond to I2C subaddress 3
         SUB3 = 1 << 1,
-        //! Do not respond to LED All Call I2C address
+        //! Do respond to LED All Call I2C address
         ALLCALL = 1 << 0,
     BITFLAGS_END(PCA9685Mode1)
     // clang-format on
