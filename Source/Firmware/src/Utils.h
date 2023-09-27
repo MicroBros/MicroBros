@@ -1,9 +1,10 @@
 #pragma once
+#include <MicroBit.h>
 
 namespace Firmware
 {
 
-template <typename T> T Clamp(T min, T max, T value)
+template <typename T> inline T Clamp(T min, T max, T value)
 {
     if (value < min)
     {
@@ -21,16 +22,16 @@ template <typename T> T Clamp(T min, T max, T value)
     }
 }
 
-float Deg2Rad(float num_deg) { return num_deg * (std::numbers::pi / 180); }
-float Rad2Deg(float num_rad) { return num_rad * (180 / std::numbers::pi); }
-float NormaliseRad(float x)
+inline float Deg2Rad(float num_deg) { return num_deg * (PI / 180); }
+inline float Rad2Deg(float num_rad) { return num_rad * (180 / PI); }
+inline float NormaliseRad(float x)
 {
-    x = std::fmod(x + std::numbers::pi, 2 * std::numbers::pi);
+    x = std::fmod(x + PI, 2 * PI);
     if (x < 0)
-        x += std::numbers::pi;
-    return x - std::numbers::pi;
+        x += PI;
+    return x - PI;
 }
-float NormaliseDeg(float x)
+inline float NormaliseDeg(float x)
 {
     x = std::fmod(x + 180, 360);
     if (x < 0)

@@ -9,13 +9,17 @@ int main()
 {
     uBit.init();
 
+    uBit.serial.printf("HALLO\n");
     // Create the DFR0548 motor driver
     Firmware::Drivers::DFR0548 dfr0548{uBit, uBit.i2c};
+    Firmware::Mouse mouse(uBit, dfr0548);
 
-    const int BASE_SPEED{2048};
+    // const int BASE_SPEED{2048};
 
     while (1)
     {
+        mouse.Run();
+        /*
         dfr0548.SetMotors(-BASE_SPEED, -BASE_SPEED, -BASE_SPEED, -BASE_SPEED);
         uBit.sleep(2000);
 
@@ -44,6 +48,7 @@ int main()
         // Stop the motors for 8 sec
         dfr0548.SetMotors(0, 0, 0, 0);
         uBit.sleep(8000);
+        */
     }
 
     return 0;
