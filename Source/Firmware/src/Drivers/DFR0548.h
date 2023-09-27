@@ -23,7 +23,7 @@ namespace Firmware::Drivers
 class DFR0548
 {
 public:
-    DFR0548(MicroBit &uBit, MicroBitI2C &i2c, uint16_t pca9685_address = 0x40 << 1);
+    DFR0548(MicroBit &uBit, MicroBitI2C &i2c, uint16_t pca9685_address = 0x40);
 
     //! The various motor outputs of the DFR0548 expansion board
     enum class MotorOutput : uint8_t
@@ -74,9 +74,9 @@ public:
     BITFLAGS_END(PCA9685Mode1)
     // clang-format on
 
-    //! Set the speed [-4095 - 4095] on a single motor
+    //! Set the speed `[-4095, 4095]` on a single motor
     void SetMotor(MotorOutput motor, int16_t speed);
-    //! Set the speeds [-4095 - 4095] on all four motors in a single I2C write
+    //! Set the speeds `[-4095, 4095]` on all four motors in a single I2C write
     void SetMotors(int16_t m1_speed, int16_t m2_speed, int16_t m3_speed, int16_t m4_speed);
 
     //! Stop a motor
