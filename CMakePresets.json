@@ -13,9 +13,36 @@
             }
         },
         {
+            "name": "base-windows",
+            "hidden": true,
+            "inherits": "base",
+            "toolset": {
+                "value": "host=x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_ASM_COMPILER": "cl.exe",
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "CMAKE_RC_COMPILER": "rc.exe"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Windows"
+                    ]
+                }
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
             "name": "Debug",
             "displayName": "Debug",
-            "inherits": "base",
+            "inherits": "base-windows",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
@@ -23,7 +50,7 @@
         {
             "name": "Release",
             "displayName": "Release",
-            "inherits": "base",
+            "inherits": "base-windows",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }

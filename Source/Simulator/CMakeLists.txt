@@ -10,6 +10,7 @@ target_link_libraries(Simulator
     ThirdParty::fmt
     ThirdParty::imgui
     ThirdParty::nfd
+    ThirdParty::SimpleBLE
     ThirdParty::stb
 )
 

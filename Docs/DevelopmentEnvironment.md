@@ -24,14 +24,7 @@ The following software/dependencies are required to work on MicroBros.
 
 If missing these dependencies can easily be installed with a package manager, on Windows you can choose from options like [WinGet](https://learn.microsoft.com/en-us/windows/package-manager/winget/) or [Scoop](https://scoop.sh/).
 
-NOTE: On Windows there seems to be issues building the Simulator with GCC, if this arrises one can make CMake pick clang instead globally by setting the following environment variables:
-- Open the Run dialouge by Win+R or right clicking the Windows symbol and selecting Run
-- Paste in `"C:\Windows\system32\rundll32.exe" sysdm.cpl,EditEnvironmentVariables` and press Enter
-- Add the following variables under User variables (these paths are based on that you used Scoop to install LLVM/clang, use other path if installed by other means)
-    - `ASM` to `%UserProfile%\scoop\apps\llvm\current\bin\clang.exe`
-    - `CC` to `%UserProfile%\scoop\apps\llvm\current\bin\clang.exe`
-    - `CXX` to `%UserProfile%\scoop\apps\llvm\current\bin\clang++.exe`
-    - `RC` to `%UserProfile%\scoop\apps\llvm\current\bin\llvm-rc.exe`
+NOTE: On Windows one needs Visual Studio installed with C++ for native development to use MSVC, it does not build with GCC or Clang at the moment.
 
 ## IDE / Editor
 
