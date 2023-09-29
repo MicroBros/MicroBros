@@ -101,6 +101,10 @@ else()
     add_subdirectory(SDL EXCLUDE_FROM_ALL)
     add_library(ThirdParty::SDL3 ALIAS SDL3-static)
 
+    # SimpleBLE
+    add_subdirectory(SimpleBLE/simpleble EXCLUDE_FROM_ALL)
+    add_library(ThirdParty::SimpleBLE ALIAS simpleble)
+
     # stb
     add_library(stb INTERFACE)
     target_include_directories(stb INTERFACE stb)

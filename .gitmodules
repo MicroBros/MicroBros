@@ -34,3 +34,6 @@
 [submodule "ThirdParty/doxygen-awesome-css"]
 	path = ThirdParty/doxygen-awesome-css
 	url = https://github.com/jothepro/doxygen-awesome-css.git
+[submodule "ThirdParty/SimpleBLE"]
+	path = ThirdParty/SimpleBLE
+	url = https://github.com/OpenBluetoothToolbox/SimpleBLE.git
