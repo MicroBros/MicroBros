@@ -32,7 +32,7 @@ public:
 } // namespace Core
 
 // Helper macros using fmt
-#define LOG(format, ...)                                                                           \
+#define LOG(text, ...)                                                                             \
     Core::Logger::Log(Core::Logger::LogLevel::None, fmt::format(text, ##__VA_ARGS__), false)
 #define LOG_LEVEL(level, text, ...) Core::Logger::Log(level, fmt::format(text, ##__VA_ARGS__))
 #define LOG_ERROR(format, ...) LOG_LEVEL(Core::Logger::LogLevel::Error, format, ##__VA_ARGS__)
