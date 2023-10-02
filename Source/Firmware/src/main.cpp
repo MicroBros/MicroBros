@@ -1,5 +1,7 @@
 #include <MicroBit.h>
 
+#include <Core/Log.h>
+
 #include "Drivers/DFR0548.h"
 #include "Mouse.h"
 
@@ -8,6 +10,8 @@ MicroBit uBit;
 int main()
 {
     uBit.init();
+
+    LOG_INFO("YOO {}", 1234);
 
     uBit.serial.printf("HALLO\n");
     // Create the DFR0548 motor driver

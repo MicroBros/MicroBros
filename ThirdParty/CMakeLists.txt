@@ -1,7 +1,7 @@
 # fmt
 if(FIRMWARE)
     set(FMT_OS OFF)
-    add_definitions(-DFMT_HEADER_ONLY)
+    add_definitions(-DFMT_STATIC_THOUSANDS_SEPARATOR=1)
 endif()
 
 add_subdirectory(fmt EXCLUDE_FROM_ALL)

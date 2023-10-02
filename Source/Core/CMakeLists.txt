@@ -1,5 +1,6 @@
 add_library(Core OBJECT
     src/Algorithm.cpp
+    src/Log.cpp
     src/Maze.cpp
     src/Mouse.cpp
     # Algorithms
@@ -11,3 +12,7 @@ target_include_directories(Core PUBLIC include/)
 target_link_libraries(Core
     ThirdParty::fmt
 )
+
+if(FIRMWARE)
+    target_link_libraries(Core ThirdParty::codal-microbit-v2)
+endif()
