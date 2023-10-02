@@ -33,8 +33,8 @@ public:
 
 // Helper macros using fmt
 #define LOG(format, ...)                                                                           \
-    LCore::Logger::Log(Core::Logger::LogLevel::None, fmt::format(text, ##__VA_ARGS__), false);
-#define LOG_LEVEL(level, text, ...) Core::Logger::Log(level, fmt::format(text, ##__VA_ARGS__));
+    Core::Logger::Log(Core::Logger::LogLevel::None, fmt::format(text, ##__VA_ARGS__), false)
+#define LOG_LEVEL(level, text, ...) Core::Logger::Log(level, fmt::format(text, ##__VA_ARGS__))
 #define LOG_ERROR(format, ...) LOG_LEVEL(Core::Logger::LogLevel::Error, format, ##__VA_ARGS__)
 #define LOG_WARN(format, ...) LOG_LEVEL(Core::Logger::LogLevel::Warn, format, ##__VA_ARGS__)
 #define LOG_INFO(format, ...) LOG_LEVEL(Core::Logger::LogLevel::Info, format, ##__VA_ARGS__)
