@@ -5,7 +5,11 @@ if(FIRMWARE)
 endif()
 
 add_subdirectory(fmt EXCLUDE_FROM_ALL)
-add_library(ThirdParty::fmt ALIAS fmt)
+if(FIRMWARE)
+    add_library(ThirdParty::fmt ALIAS fmt)
+else()
+    add_library(ThirdParty::fmt ALIAS fmt-header-only)
+endif()
 
 if(FIRMWARE)
     include(codal/utils/cmake/toolchains/ARM_GCC/compiler-flags.cmake)

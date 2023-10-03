@@ -6,8 +6,15 @@
 
 #include "Window.h"
 
+#include "BLE.h"
+
 int main(int argc, char *argv[])
 {
+#ifdef WIN32
+    // BLE needs to be initialised once here, or issues will arrise with WinRT, THANKS MICROSOFT
+    Simulator::BLE ble{};
+#endif
+
     // Read the args (minus the program) from argv
     std::vector<std::string> args{argv + 1, argv + argc};
 

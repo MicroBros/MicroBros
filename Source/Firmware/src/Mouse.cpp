@@ -1,3 +1,5 @@
+#include <Core/Log.h>
+
 #include "Mouse.h"
 
 namespace Firmware
@@ -31,6 +33,8 @@ void Mouse::Debug()
 
     this->uBit.serial.printf("Position x: ", position_x, "\n");
     this->uBit.serial.printf("Position y: ", position_y, "\n");
+
+    LOG("Acceleration x: {}\n", acceleration_x);
 
     this->uBit.serial.printf("----------------------", "\n");
 }

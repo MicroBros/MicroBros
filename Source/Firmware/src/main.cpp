@@ -2,6 +2,7 @@
 
 #include <Core/Log.h>
 
+#include "BLE/ControllerService.h"
 #include "Drivers/DFR0548.h"
 #include "Mouse.h"
 
@@ -10,15 +11,18 @@ MicroBit uBit;
 int main()
 {
     uBit.init();
+    // Turn on BLE advertising
+    uBit.ble->init(ManagedString(microbit_friendly_name()), uBit.getSerial(), uBit.messageBus,
+                   uBit.storage, false);
+    uBit.ble->advertise();
+    uBit.ble->setAdvertiseOnDisconnect(true);
 
-    LOG_INFO("YOO {}", 1234);
-
-    uBit.serial.printf("HALLO\n");
     // Create the DFR0548 motor driver
     Firmware::Drivers::DFR0548 dfr0548{uBit, uBit.i2c};
     Firmware::Mouse mouse(uBit, dfr0548);
 
-    // const int BASE_SPEED{2048};
+    // Setup BLE services
+    Firmware::BLE::ControllerService controller_service(dfr0548);
 
     while (1)
     {

@@ -71,6 +71,16 @@ Window::Window(std::string executable)
     if (algorithms.empty())
         Error("No algorithms registered, simulator wont work!");
 
+    try
+    {
+        ble = std::make_unique<BLE>();
+    }
+    catch (std::exception &e)
+    {
+        Error(e.what());
+        ble = nullptr;
+    }
+
     std::sort(algorithms.begin(), algorithms.end());
 }
 
@@ -99,6 +109,10 @@ void Window::Run()
 
         // Draw ImGui
         Draw(done);
+
+        // Run BLE logic
+        if (ble)
+            ble->Tick();
     }
 }
 
@@ -147,6 +161,16 @@ void Window::Draw(bool &done)
         DrawMazeWindow();
     }
 
+    // Remote connections
+    if (ble)
+    {
+        if (remote_connections_window)
+        {
+            DrawRemoteConnections();
+        }
+        ble->SetWindowOpen(remote_connections_window);
+    }
+
     // Render
     ImGui::Render();
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -167,6 +191,14 @@ void Window::DrawMenuBar(bool &done)
             done = true;
         ImGui::EndMenu();
     }
+    if (ImGui::BeginMenu("Remote"))
+    {
+        if (ImGui::MenuItem("Connect to device...", NULL, &remote_connections_window))
+        {
+        }
+        ImGui::EndMenu();
+    }
+
     ImGui::EndMainMenuBar();
 }
 
@@ -216,6 +248,68 @@ void Window::DrawMazeWindow()
     // Simulation
     ImGui::SeparatorText("Simulation");
     ImGui::DragFloat("Cycles/s", &maze->Speed(), 0.1f, 0.0f, 20.0f);
+
+    ImGui::End();
+}
+
+void Window::DrawRemoteConnections()
+{
+    ImGui::SetNextWindowSize(ImVec2(500.0f, 220.0f));
+    ImGui::Begin("Remote connections", NULL, ImGuiWindowFlags_NoResize);
+
+    if (ImGui::Button("Scan"))
+        ble->Scan();
+    ImGui::SameLine();
+
+    ImGui::Checkbox("Auto-scan", &ble->Autoscan());
+    if (ImGui::BeginTable("ble_devices", 3))
+    {
+        ImGui::TableSetupColumn("Address");
+        ImGui::TableSetupColumn("Identifier", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Actions");
+        ImGui::TableHeadersRow();
+
+        for (size_t i{0}; i < ble->Peripherals().size(); i++)
+        {
+            auto &peripheral{ble->Peripherals()[i]};
+            // Peripheral row
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", peripheral.address().c_str());
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", peripheral.identifier().c_str());
+            ImGui::TableNextColumn();
+
+            // Disconnect
+            if (peripheral.is_connected())
+            {
+                if (ImGui::Button("Disconnect"))
+                    ble->Disconnect(peripheral);
+                // Set the BLE device as active if not
+                if (!ble->IsActive(peripheral))
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Set Active"))
+                        ble->SetActive(peripheral);
+                }
+            }
+            // Non-connectable (greyed-out connect)
+            else if (!peripheral.is_connectable())
+            {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                ImGui::Button("Connect");
+                ImGui::PopItemFlag();
+            }
+            // Connect
+            else
+            {
+                if (ImGui::Button("Connect"))
+                    ble->Connect(peripheral);
+            }
+        }
+
+        ImGui::EndTable();
+    }
 
     ImGui::End();
 }

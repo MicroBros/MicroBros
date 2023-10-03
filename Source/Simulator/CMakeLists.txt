@@ -1,4 +1,5 @@
 add_executable(Simulator
+    src/BLE.cpp src/BLE.h
     src/Main.cpp
     src/SimulatorMaze.cpp src/SimulatorMaze.h
     src/Utils.cpp src/Utils.h

@@ -12,6 +12,7 @@
 #include <imgui_internal.h>
 #include <stdio.h>
 
+#include "BLE.h"
 #include "SimulatorMaze.h"
 #include "Utils.h"
 
@@ -39,11 +40,15 @@ private:
     void DrawMenuBar(bool &done);
     //! Draw the imgui window displaying the Maze
     void DrawMazeWindow();
+    //! Draw the remote connections window
+    void DrawRemoteConnections();
     //! Open the file picker to open a mazefile
     void OpenMaze();
     //! Show an error modal with error message
     void Error(std::string err);
 
+    std::unique_ptr<BLE> ble{nullptr};
+    bool remote_connections_window{true};
     float dpi{1.0f};
     std::vector<std::string> algorithms;
     size_t algorithm{0};

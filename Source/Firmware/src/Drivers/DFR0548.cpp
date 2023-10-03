@@ -14,13 +14,6 @@ uint8_t CalculatePrescaler(uint16_t frequency)
     else if (frequency > 1526)
         frequency = 1526;
 
-    /*
-    uint16_t min = 24;
-    uint16_t max = 1526;
-
-    frequency = Clamp(min, max, frequency);
-    */
-
     // Calculate the prescaler by Clock / ((Values (12-bit) = 4096) * frequency (Hz))
     return (uint8_t)std::roundf(25'000'000.0f / (4096.0f * frequency));
 }
