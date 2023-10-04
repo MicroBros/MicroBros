@@ -1,6 +1,7 @@
 #include "Window.h"
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 
@@ -8,13 +9,15 @@
 #include <nfd.h>
 
 #include <Core/Algorithm.h>
+#include <Core/Comm.h>
+#include <Core/Log.h>
 
 namespace Simulator
 {
 
 // SDL3/imgui window intialisation (mostly derived from the official example:
 // https://github.com/ocornut/imgui/blob/master/examples/example_SDL3_opengl2/main.cpp)
-Window::Window(std::string executable)
+Window::Window(std::string executable, std::unique_ptr<BLE> ble) : ble{std::move(ble)}
 {
 #ifdef LINUX
     setenv("SDL_VIDEODRIVER", "x11", 1);
@@ -71,16 +74,6 @@ Window::Window(std::string executable)
     if (algorithms.empty())
         Error("No algorithms registered, simulator wont work!");
 
-    try
-    {
-        ble = std::make_unique<BLE>();
-    }
-    catch (std::exception &e)
-    {
-        Error(e.what());
-        ble = nullptr;
-    }
-
     std::sort(algorithms.begin(), algorithms.end());
 }
 
@@ -111,8 +104,77 @@ void Window::Run()
         Draw(done);
 
         // Run BLE logic
-        if (ble)
+        try
+        {
             ble->Tick();
+        }
+        catch (const std::exception &e)
+        {
+            Error(e.what());
+        }
+
+        // TODO: Move this
+        if (remote_motor_control)
+        {
+            auto active_device{ble->GetActive()};
+            if (active_device.has_value())
+            {
+                float forward{0};
+                float right{0};
+                float rot{0};
+
+                // Keyboard input
+                if (remote_motor_control_keyboard)
+                {
+                    int n;
+                    auto kb_state{SDL_GetKeyboardState(&n)};
+
+                    float speed{remote_motor_control_speed / 4095.0f};
+
+                    // Directions
+                    if (kb_state[SDL_SCANCODE_W])
+                        forward += speed;
+                    if (kb_state[SDL_SCANCODE_A])
+                        right -= speed;
+                    if (kb_state[SDL_SCANCODE_S])
+                        forward -= speed;
+                    if (kb_state[SDL_SCANCODE_D])
+                        right += speed;
+                    // Rotation
+                    if (kb_state[SDL_SCANCODE_Q])
+                        rot -= speed;
+                    if (kb_state[SDL_SCANCODE_E])
+                        rot += speed;
+                }
+
+                // Ensure everything stays within limits
+                float denominator{
+                    std::max(std::abs(forward) + std::abs(right) + std::abs(rot), 1.0f)};
+
+                BLE_STRUCTURE(MotorService, Motors)
+                motors = {
+                    .rf = static_cast<int16_t>((forward - right - rot) / denominator * 4095.0f),
+                    .rb = static_cast<int16_t>((forward + right - rot) / denominator * 4095.0f),
+                    .lf = static_cast<int16_t>((forward + right + rot) / denominator * 4095.0f),
+                    .lb = static_cast<int16_t>((forward - right + rot) / denominator * 4095.0f)};
+
+                std::string data{
+                    std::string((char *)&motors, sizeof(BLE_STRUCTURE(MotorService, Motors)))};
+
+                try
+                {
+                    // Send it off :salute:
+                    active_device->write_command(
+                        MICROBIT_BLE_SERVICE_UUID(MotorService),
+                        MICROBIT_BLE_CHARACTERISTIC_UUID(MotorService, Motors), data);
+                }
+                catch (const std::exception &e)
+                {
+                    Error(e.what());
+                    remote_motor_control = false;
+                }
+            }
+        }
     }
 }
 
@@ -162,14 +224,15 @@ void Window::Draw(bool &done)
     }
 
     // Remote connections
-    if (ble)
+    if (remote_connections_window)
     {
-        if (remote_connections_window)
-        {
-            DrawRemoteConnections();
-        }
-        ble->SetWindowOpen(remote_connections_window);
+        DrawRemoteConnections();
     }
+    ble->SetWindowOpen(remote_connections_window);
+
+    // Remote motor control
+    if (remote_motor_control_window)
+        DrawRemoteMotors();
 
     // Render
     ImGui::Render();
@@ -196,6 +259,7 @@ void Window::DrawMenuBar(bool &done)
         if (ImGui::MenuItem("Connect to device...", NULL, &remote_connections_window))
         {
         }
+        ImGui::MenuItem("Remote motor control", NULL, &remote_motor_control_window);
         ImGui::EndMenu();
     }
 
@@ -258,7 +322,16 @@ void Window::DrawRemoteConnections()
     ImGui::Begin("Remote connections", NULL, ImGuiWindowFlags_NoResize);
 
     if (ImGui::Button("Scan"))
-        ble->Scan();
+    {
+        try
+        {
+            ble->Scan();
+        }
+        catch (const std::exception &e)
+        {
+            Error(e.what());
+        }
+    }
     ImGui::SameLine();
 
     ImGui::Checkbox("Auto-scan", &ble->Autoscan());
@@ -284,7 +357,16 @@ void Window::DrawRemoteConnections()
             if (peripheral.is_connected())
             {
                 if (ImGui::Button("Disconnect"))
-                    ble->Disconnect(peripheral);
+                {
+                    try
+                    {
+                        ble->Disconnect(peripheral);
+                    }
+                    catch (const std::exception &e)
+                    {
+                        Error(e.what());
+                    }
+                }
                 // Set the BLE device as active if not
                 if (!ble->IsActive(peripheral))
                 {
@@ -304,12 +386,41 @@ void Window::DrawRemoteConnections()
             else
             {
                 if (ImGui::Button("Connect"))
-                    ble->Connect(peripheral);
+                {
+                    try
+                    {
+                        ble->Connect(peripheral);
+                    }
+                    catch (const std::exception &e)
+                    {
+                        Error(e.what());
+                    }
+                }
             }
         }
 
         ImGui::EndTable();
     }
+
+    ImGui::End();
+}
+
+void Window::DrawRemoteMotors()
+{
+    ImGui::SetNextWindowSize(ImVec2(200.0f, 150.0f));
+    ImGui::Begin("Remote motor control", NULL, ImGuiWindowFlags_NoResize);
+
+    bool connected{ble->GetActive().has_value()};
+
+    ImGui::Text("Status:");
+    ImGui::SameLine();
+    ImGui::Text(connected ? "Connected" : "Disconnected");
+
+    ImGui::Checkbox("Enable", &remote_motor_control);
+
+    ImGui::Checkbox("Keyboard (WASD+QE)", &remote_motor_control_keyboard);
+    ImGui::DragInt("Speed", &remote_motor_control_speed, 10, 100, 4095, "%d",
+                   ImGuiSliderFlags_AlwaysClamp);
 
     ImGui::End();
 }

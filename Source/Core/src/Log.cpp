@@ -13,8 +13,6 @@ std::string_view GetLogLevelString(const Logger::LogLevel level)
 {
     switch (level)
     {
-    case Logger::LogLevel::None:
-        return "NONE ";
     case Logger::LogLevel::Error:
         return "ERROR";
     case Logger::LogLevel::Warn:
@@ -23,6 +21,8 @@ std::string_view GetLogLevelString(const Logger::LogLevel level)
         return "INFO ";
     case Logger::LogLevel::Debug:
         return "DEBUG";
+    default:
+        return "";
     }
 }
 

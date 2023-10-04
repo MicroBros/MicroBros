@@ -25,13 +25,15 @@ class Window
 {
 public:
     //! Open a window, pass absolute path to the executable launched
-    Window(std::string executable);
+    Window(std::string executable, std::unique_ptr<BLE> ble);
     ~Window();
 
     //! Open and load the Maze and setup SimulatorMaze based on path
     void OpenMaze(std::string path);
     //! Run the Window event-loop blocking until closed
     void Run();
+    //! Show an error modal with error message
+    void Error(std::string err);
 
 private:
     //! Draw the imgui UI
@@ -42,13 +44,17 @@ private:
     void DrawMazeWindow();
     //! Draw the remote connections window
     void DrawRemoteConnections();
+    //! Draw the remote motors window
+    void DrawRemoteMotors();
     //! Open the file picker to open a mazefile
     void OpenMaze();
-    //! Show an error modal with error message
-    void Error(std::string err);
 
-    std::unique_ptr<BLE> ble{nullptr};
+    std::unique_ptr<BLE> ble;
     bool remote_connections_window{true};
+    bool remote_motor_control_window{false};
+    bool remote_motor_control{false};
+    bool remote_motor_control_keyboard{true};
+    int remote_motor_control_speed{2048};
     float dpi{1.0f};
     std::vector<std::string> algorithms;
     size_t algorithm{0};

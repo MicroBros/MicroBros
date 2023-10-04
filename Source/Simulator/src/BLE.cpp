@@ -56,6 +56,12 @@ void BLE::Scan()
         if (ConnectablePeripheral(p))
             peripherals.push_back(p);
     }
+
+    for (auto p : adapter->get_paired_peripherals())
+    {
+        if (ConnectablePeripheral(p))
+            peripherals.push_back(p);
+    }
 }
 
 void BLE::Connect(SimpleBLE::Peripheral &peripheral)
@@ -63,8 +69,31 @@ void BLE::Connect(SimpleBLE::Peripheral &peripheral)
     LOG_INFO("Connecting to BLE device Addr:{}, Ident:{}", peripheral.address(),
              peripheral.identifier());
     peripheral.connect();
-    active_peripheral = peripheral.address();
-    LOG_INFO("Connected");
+    SetActive(peripheral);
+    std::string services{};
+    for (auto &service : peripheral.services())
+    {
+        services += fmt::format("Service {}:\n", service.uuid());
+        for (auto &characteristic : service.characteristics())
+        {
+            services += fmt::format("\tCharacteristic {}:\n", characteristic.uuid());
+            services += "\tCapabilities: ";
+            for (auto &capability : characteristic.capabilities())
+            {
+                services += capability + " ";
+            }
+            services += "\n";
+
+            services += "\tDescriptors: ";
+            for (auto &descriptor : characteristic.descriptors())
+            {
+                services += descriptor.uuid() + " ";
+            }
+            services += "\n";
+        }
+    }
+
+    LOG_INFO("Connected to to BLE device Addr:{}\n{}", peripheral.address(), services);
 }
 
 void BLE::Disconnect(SimpleBLE::Peripheral &peripheral)
@@ -77,14 +106,14 @@ void BLE::Disconnect(SimpleBLE::Peripheral &peripheral)
 void BLE::SetActive(SimpleBLE::Peripheral &peripheral)
 {
     if (peripheral.is_connected())
-        active_peripheral = peripheral.identifier();
+        active_peripheral = peripheral.address();
 }
 
 std::optional<SimpleBLE::Peripheral> BLE::GetActive()
 {
     for (auto &peripheral : peripherals)
     {
-        if (peripheral.identifier() == active_peripheral && peripheral.is_connected())
+        if (peripheral.address() == active_peripheral && peripheral.is_connected())
             return peripheral;
     }
 

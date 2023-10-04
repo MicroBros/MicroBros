@@ -10,10 +10,18 @@
 
 int main(int argc, char *argv[])
 {
-#ifdef WIN32
-    // BLE needs to be initialised once here, or issues will arrise with WinRT, THANKS MICROSOFT
-    Simulator::BLE ble{};
-#endif
+    std::unique_ptr<Simulator::BLE> ble{nullptr};
+    std::optional<std::string> error;
+    // BLE needs to be initialised once here, or issues will arrise with
+    // WinRT, THANKS MICROSOFT
+    try
+    {
+        ble.reset(new Simulator::BLE());
+    }
+    catch (const std::exception &e)
+    {
+        error = e.what();
+    }
 
     // Read the args (minus the program) from argv
     std::vector<std::string> args{argv + 1, argv + argc};
@@ -22,7 +30,7 @@ int main(int argc, char *argv[])
 
     try
     {
-        auto window = std::make_unique<Simulator::Window>(argv[0]);
+        auto window = std::make_unique<Simulator::Window>(argv[0], std::move(ble));
 
         // Parse command arguments
         if (!args.empty())
@@ -33,6 +41,8 @@ int main(int argc, char *argv[])
                 window->OpenMaze(args[0]);
             }
         }
+        if (error.has_value())
+            window->Error(error.value());
 
         window->Run();
     }

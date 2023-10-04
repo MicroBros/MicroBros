@@ -1,8 +1,9 @@
 #include <MicroBit.h>
+#include <memory>
 
 #include <Core/Log.h>
 
-#include "BLE/ControllerService.h"
+#include "BLE/MotorService.h"
 #include "Drivers/DFR0548.h"
 #include "Mouse.h"
 
@@ -11,23 +12,22 @@ MicroBit uBit;
 int main()
 {
     uBit.init();
-    // Turn on BLE advertising
-    uBit.ble->init(ManagedString(microbit_friendly_name()), uBit.getSerial(), uBit.messageBus,
-                   uBit.storage, false);
-    uBit.ble->advertise();
-    uBit.ble->setAdvertiseOnDisconnect(true);
 
     // Create the DFR0548 motor driver
-    Firmware::Drivers::DFR0548 dfr0548{uBit, uBit.i2c};
-    Firmware::Mouse mouse(uBit, dfr0548);
+    auto dfr0548{std::make_unique<Firmware::Drivers::DFR0548>(uBit, uBit.i2c)};
+    // Firmware::Mouse mouse(uBit, dfr0548);
 
     // Setup BLE services
-    Firmware::BLE::ControllerService controller_service(dfr0548);
+    auto motor_service{std::make_unique<Firmware::BLE::MotorService>(dfr0548.get())};
 
-    while (1)
+    LOG_INFO("Initialised MicroMouse!");
+
+    release_fiber();
+
+    /*while (1)
     {
         mouse.Run();
-        /*
+
         dfr0548.SetMotors(-BASE_SPEED, -BASE_SPEED, -BASE_SPEED, -BASE_SPEED);
         uBit.sleep(2000);
 
@@ -56,8 +56,8 @@ int main()
         // Stop the motors for 8 sec
         dfr0548.SetMotors(0, 0, 0, 0);
         uBit.sleep(8000);
-        */
-    }
+
+    }*/
 
     return 0;
 }

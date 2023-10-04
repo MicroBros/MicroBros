@@ -13,6 +13,7 @@ endif()
 
 # Configure C++
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Enable DWARF 4 symbols on UNIX platforms
 if(UNIX AND NOT FIRMWARE)

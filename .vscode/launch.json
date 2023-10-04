@@ -18,7 +18,7 @@
             "executable": "${workspaceFolder}/build/Firmware/Source/Firmware/Firmware.elf",
             "name": "Debug (PyOCD)",
             "request": "launch",
-            "runToEntryPoint": "main",
+            //"runToEntryPoint": "main",
             "showDevDebugOutput": "none",
             "servertype": "pyocd",
             "targetId": "nrf52833"
