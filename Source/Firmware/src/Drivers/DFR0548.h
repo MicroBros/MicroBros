@@ -25,7 +25,7 @@ namespace Firmware::Drivers
 class DFR0548
 {
 public:
-    DFR0548(MicroBit &uBit, MicroBitI2C &i2c, uint16_t pca9685_address = 0x40);
+    DFR0548(MicroBit &uBit, MicroBitI2C &i2c, uint16_t pca9685_address = 0x40 << 1);
 
     //! The various motor outputs of the DFR0548 expansion board
     enum class MotorOutput : uint8_t

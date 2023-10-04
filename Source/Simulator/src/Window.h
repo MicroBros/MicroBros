@@ -53,7 +53,9 @@ private:
     bool remote_connections_window{true};
     bool remote_motor_control_window{false};
     bool remote_motor_control{false};
-    bool remote_motor_control_keyboard{true};
+    bool remote_motor_control_keyboard{false};
+    bool remote_motor_control_gamepad{true};
+    SDL_Gamepad *sdl_gamepad{nullptr};
     int remote_motor_control_speed{2048};
     float dpi{1.0f};
     std::vector<std::string> algorithms;

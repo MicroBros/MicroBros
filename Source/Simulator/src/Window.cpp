@@ -22,7 +22,7 @@ Window::Window(std::string executable, std::unique_ptr<BLE> ble) : ble{std::move
 #ifdef LINUX
     setenv("SDL_VIDEODRIVER", "x11", 1);
 #endif
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK) != 0)
     {
         throw std::runtime_error(fmt::format("Error initialising SDL: {}", SDL_GetError()));
     }
@@ -123,6 +123,39 @@ void Window::Run()
                 float right{0};
                 float rot{0};
 
+                // Gamepad input
+                if (remote_motor_control_gamepad)
+                {
+                    if (sdl_gamepad != nullptr)
+                    {
+
+#define CONVERT_AXIS(OUT, AXIS)                                                                    \
+    {                                                                                              \
+        auto axis{SDL_GetGamepadAxis(sdl_gamepad, AXIS)};                                          \
+        float normalised{axis > 0 ? axis / 32767.0f : axis / 32768.0f};                            \
+        if (normalised > 0.1 || normalised < -0.1)                                                 \
+            OUT = (normalised * 0.9) + 0.1;                                                        \
+    }
+                        float backward{0};
+
+                        CONVERT_AXIS(forward, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
+                        CONVERT_AXIS(backward, SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
+                        CONVERT_AXIS(right, SDL_GAMEPAD_AXIS_RIGHTX)
+                        CONVERT_AXIS(rot, SDL_GAMEPAD_AXIS_LEFTX)
+
+                        forward -= backward;
+                    }
+                    else
+                    {
+                        int count{0};
+                        auto joysticks{SDL_GetJoysticks(&count)};
+                        if (count > 0)
+                            sdl_gamepad = SDL_OpenGamepad(joysticks[0]);
+                        if (joysticks != nullptr)
+                            SDL_free(joysticks);
+                    }
+                }
+
                 // Keyboard input
                 if (remote_motor_control_keyboard)
                 {
@@ -176,7 +209,7 @@ void Window::Run()
             }
         }
     }
-}
+} // namespace Simulator
 
 void Window::Draw(bool &done)
 {
@@ -407,7 +440,7 @@ void Window::DrawRemoteConnections()
 
 void Window::DrawRemoteMotors()
 {
-    ImGui::SetNextWindowSize(ImVec2(200.0f, 150.0f));
+    ImGui::SetNextWindowSize(ImVec2(200.0f, 160.0f));
     ImGui::Begin("Remote motor control", NULL, ImGuiWindowFlags_NoResize);
 
     bool connected{ble->GetActive().has_value()};
@@ -421,6 +454,7 @@ void Window::DrawRemoteMotors()
     ImGui::Checkbox("Keyboard (WASD+QE)", &remote_motor_control_keyboard);
     ImGui::DragInt("Speed", &remote_motor_control_speed, 10, 100, 4095, "%d",
                    ImGuiSliderFlags_AlwaysClamp);
+    ImGui::Checkbox("Gamepad", &remote_motor_control_gamepad);
 
     ImGui::End();
 }

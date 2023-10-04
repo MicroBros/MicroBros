@@ -46,8 +46,7 @@ void WritePWMValues(uint8_t *buffer, uint8_t offset, int16_t speed) noexcept
 }
 
 DFR0548::DFR0548(MicroBit &uBit, MicroBitI2C &i2c, uint16_t pca9685_address)
-    : uBit{uBit}, i2c{i2c},
-      pca9685_address{static_cast<uint16_t>(pca9685_address << 1)} // Correct the address for 7-bit
+    : uBit{uBit}, i2c{i2c}, pca9685_address{pca9685_address} // Correct the address for 7-bit
 {
     // Reset the Mode1 register
     i2c.writeRegister(pca9685_address, static_cast<uint8_t>(PCA9685Reg::MODE1), 0x00);
