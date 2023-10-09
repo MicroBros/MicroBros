@@ -52,13 +52,13 @@ public:
     inline void Reset() { system_timer_cancel_event(MICROBIT_ID_MICROBROS_TIMER, id); }
 
     //! Override if the timer is a oneshot
-    inline void SetOneshot(bool oneshot) { this->oneshot = oneshot; }
+    inline Timer *SetOneshot(bool oneshot) { this->oneshot = oneshot; }
 
 private:
     uint16_t id;
     uint32_t interval;
     std::function<void()> callback;
-    bool oneshot;
+    bool oneshot{false};
 
     inline void TimerCallback(MicroBitEvent e)
     {
