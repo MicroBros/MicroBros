@@ -4,6 +4,7 @@ add_executable(Firmware
     src/main.cpp
     src/Mouse.cpp src/Mouse.h
     src/PID.cpp src/PID.h
+    src/Timer.h
     src/Utils.h
 )
 target_link_libraries(Firmware PUBLIC Core)
