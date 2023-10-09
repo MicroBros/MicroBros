@@ -18,14 +18,14 @@ class Mouse : public Core::Mouse
 {
 
 public:
-    Mouse(MicroBit &uBit, Firmware::Drivers::DFR0548 &driver);
+    Mouse(MicroBit &uBit, Firmware::Drivers::DFR0548 *driver);
 
     void Debug();
     void Run();
 
 private:
     MicroBit &uBit;
-    Firmware::Drivers::DFR0548 &driver;
+    Firmware::Drivers::DFR0548 *driver;
 
     //! Distance sensors states
     float distance_fl = 0;
@@ -34,10 +34,15 @@ private:
     float distance_r = 0;
 
     //! PID objects dedicated to each sensor
-    Firmware::PID fl_pid;
-    Firmware::PID fr_pid;
-    Firmware::PID l_pid;
-    Firmware::PID r_pid;
+    Firmware::PID front_pid;
+    Firmware::PID left_pid;
+    Firmware::PID right_pid;
+
+    //! Motor values
+    uint16_t fl_pwm = 0;
+    uint16_t fr_pwm = 0;
+    uint16_t bl_pwm = 0;
+    uint16_t br_pwm = 0;
 
     //! Acceleration, velocity, position relative to Earth (MAYBE NOT NEEDED)
     float acceleration_x = 0;

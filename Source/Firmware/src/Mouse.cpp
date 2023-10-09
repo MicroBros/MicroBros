@@ -5,7 +5,7 @@
 namespace Firmware
 {
 
-Mouse::Mouse(MicroBit &uBit, Firmware::Drivers::DFR0548 &driver)
+Mouse::Mouse(MicroBit &uBit, Firmware::Drivers::DFR0548* driver)
     : uBit{uBit}, driver{driver}, front_pid(uBit.timer, "fl", 20, 0, 10),
       left_pid(uBit.timer, "l", 20, 0, 10), right_pid(uBit.timer, "r", 20, 0, 10)
 {
@@ -43,7 +43,22 @@ void Mouse::Debug()
     this->uBit.serial.printf("----------------------", "\n");
 }
 
-void Mouse::Perp() { float distance_front_diff = distance_fl - distance_fr; }
+/*!
+    Regulates the front of the car to be perpendicular to the wall in front of it.
+    Should only be used when the angle between the sensors are not great enough to give invalid
+   values.
+*/
+void Mouse::Perp()
+{
+    float diff = distance_fr - distance_fl;
+    float result = front_pid.Regulate(0, diff, uBit.timer.getTime());
+    fl_pwm -= result;
+    bl_pwm -= result;
+    fr_pwm += result;
+    br_pwm += result;
+    // Insert exception when angle is too great
+    // Need to double check fortegn
+}
 
 // UpdateVector() assumes the compass heading is correct
 void Mouse::UpdateAcceleration()
