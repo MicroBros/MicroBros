@@ -1,11 +1,13 @@
 #pragma once
 
 #include <array>
+#include <memory>
 
 #include <I2C.h>
 
 #include <Core/Bitflags.h>
 
+#include "../Timer.h"
 #include "../Utils.h"
 
 namespace Firmware::Drivers
@@ -53,6 +55,22 @@ public:
         PRE_SCALE = 0xFE,
     };
 
+    //! Struct for Motor values
+    struct MotorValues
+    {
+        //! Motor 1
+        int16_t m1{0};
+        //! Motor 2
+        int16_t m2{0};
+        //! Motor 3
+        int16_t m3{0};
+        //! Motor 4
+        int16_t m4{0};
+
+        // Generate comparison functions
+        auto operator<=>(const MotorValues &) const = default;
+    };
+
     // clang-format off
     /*! \brief Bitflags for the PCA9685 MODE1 register
     */
@@ -76,13 +94,9 @@ public:
     BITFLAGS_END(PCA9685Mode1)
     // clang-format on
 
-    //! Set the speed `[-4095, 4095]` on a single motor
-    void SetMotor(MotorOutput motor, int16_t speed);
     //! Set the speeds `[-4095, 4095]` on all four motors in a single I2C write
     void SetMotors(int16_t m1_speed, int16_t m2_speed, int16_t m3_speed, int16_t m4_speed);
 
-    //! Stop a motor
-    inline void StopMotor(MotorOutput motor) noexcept { SetMotor(motor, 0); }
     //! Stop all the motors
     inline void StopMotors() noexcept { SetMotors(0, 0, 0, 0); }
 
@@ -91,9 +105,16 @@ public:
                                                               MotorOutput::M3, MotorOutput::M4};
 
 private:
+    //! Update the motor values
+    void Update();
+
     MicroBit &uBit;
     MicroBitI2C &i2c;
     uint16_t pca9685_address;
+    uint16_t component_id;
+    MotorValues current_motors;
+    MotorValues set_motors;
+    std::unique_ptr<Firmware::Timer> timer;
 
     constexpr static std::array<PCA9685Reg, 4> PCA9685_LED_BASE = {
         PCA9685Reg::LED6_ON_L, PCA9685Reg::LED4_ON_L, PCA9685Reg::LED2_ON_L, PCA9685Reg::LED0_ON_L};

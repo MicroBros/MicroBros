@@ -1,6 +1,10 @@
+#include <cmath>
+
 #include <MicroBit.h>
 
 #include "DFR0548.h"
+
+#include <Core/Log.h>
 
 namespace Firmware::Drivers
 {
@@ -65,25 +69,39 @@ DFR0548::DFR0548(MicroBit &uBit, MicroBitI2C &i2c, uint16_t pca9685_address)
     // Remove sleep again and enable restart and auto-increment I2C logic
     i2c.writeRegister(pca9685_address, static_cast<uint8_t>(PCA9685Reg::MODE1),
                       PCA9685Mode1::RESTART | PCA9685Mode1::AI | PCA9685Mode1::ALLCALL);
+
+    timer = std::make_unique<Firmware::Timer>([this]() { this->Update(); });
+    timer->EveryMs(8);
 }
 
-void DFR0548::SetMotor(MotorOutput motor, int16_t speed)
+inline int16_t Smooth(int16_t from, int16_t to, int16_t step) noexcept
 {
-    // Addr + LED (motor) values
-    std::array<uint8_t, 1 + 8> buffer{};
-
-    // Find the LED base address for the motor
-    buffer[0] = static_cast<uint8_t>(PCA9685_LED_BASE[static_cast<uint8_t>(motor)]);
-
-    // Set the motor "LED" values in the buffer
-    WritePWMValues(buffer.data(), 1, speed);
-
-    // Write the values to the PCA9685 over I2C
-    i2c.write(pca9685_address, buffer.data(), buffer.size());
+    if (to == from)
+        return from;
+    if (to < 0 == from < 0)
+    {
+        from = to;
+    }
+    else
+    {
+        if (to > from)
+            return std::min(to, static_cast<int16_t>(from + step));
+        else
+            return std::max(to, static_cast<int16_t>(from - step));
+    }
 }
 
-void DFR0548::SetMotors(int16_t m1_speed, int16_t m2_speed, int16_t m3_speed, int16_t m4_speed)
+void DFR0548::Update()
 {
+    // Check if there is no need for further smoothing
+    if (current_motors == set_motors)
+        return;
+
+    current_motors.m1 = Smooth(current_motors.m1, set_motors.m1, 100);
+    current_motors.m2 = Smooth(current_motors.m2, set_motors.m2, 100);
+    current_motors.m3 = Smooth(current_motors.m3, set_motors.m3, 100);
+    current_motors.m4 = Smooth(current_motors.m4, set_motors.m4, 100);
+
     // Addr + LED (motors) values
     std::array<uint8_t, 1 + (8 * 4)> buffer{};
 
@@ -91,13 +109,21 @@ void DFR0548::SetMotors(int16_t m1_speed, int16_t m2_speed, int16_t m3_speed, in
     buffer[0] = static_cast<uint8_t>(PCA9685Reg::LED0_ON_L);
 
     // Write the PWM values to the buffer
-    WritePWMValues(buffer.data(), 1 + (8 * 0), m4_speed);
-    WritePWMValues(buffer.data(), 1 + (8 * 1), m3_speed);
-    WritePWMValues(buffer.data(), 1 + (8 * 2), m2_speed);
-    WritePWMValues(buffer.data(), 1 + (8 * 3), m1_speed);
+    WritePWMValues(buffer.data(), 1 + (8 * 0), current_motors.m4);
+    WritePWMValues(buffer.data(), 1 + (8 * 1), current_motors.m3);
+    WritePWMValues(buffer.data(), 1 + (8 * 2), current_motors.m2);
+    WritePWMValues(buffer.data(), 1 + (8 * 3), current_motors.m1);
 
     // Write the values to the PCA9685 over I2C
     i2c.write(pca9685_address, buffer.data(), buffer.size());
+}
+
+void DFR0548::SetMotors(int16_t m1_speed, int16_t m2_speed, int16_t m3_speed, int16_t m4_speed)
+{
+    set_motors.m1 = m1_speed;
+    set_motors.m2 = m2_speed;
+    set_motors.m3 = m3_speed;
+    set_motors.m4 = m4_speed;
 }
 
 }; // namespace Firmware::Drivers
