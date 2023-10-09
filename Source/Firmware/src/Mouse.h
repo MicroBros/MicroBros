@@ -7,6 +7,8 @@
 
 #include "Drivers/DFR0548.h"
 
+#include "PID.h"
+
 #include "Utils.h"
 
 namespace Firmware
@@ -25,7 +27,19 @@ private:
     MicroBit &uBit;
     Firmware::Drivers::DFR0548 &driver;
 
-    //! Acceleration, velocity, position relative to Earth
+    //! Distance sensors states
+    float distance_fl = 0;
+    float distance_fr = 0;
+    float distance_l = 0;
+    float distance_r = 0;
+
+    //! PID objects dedicated to each sensor
+    Firmware::PID fl_pid;
+    Firmware::PID fr_pid;
+    Firmware::PID l_pid;
+    Firmware::PID r_pid;
+
+    //! Acceleration, velocity, position relative to Earth (MAYBE NOT NEEDED)
     float acceleration_x = 0;
     float acceleration_y = 0;
     float velocity_x = 0;
@@ -44,6 +58,7 @@ private:
     void UpdateAcceleration();
     void UpdateVelocity();
     void UpdatePosition();
+    void Perp();
 };
 
 } // namespace Firmware

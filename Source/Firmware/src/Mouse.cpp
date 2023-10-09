@@ -5,7 +5,11 @@
 namespace Firmware
 {
 
-Mouse::Mouse(MicroBit &uBit, Firmware::Drivers::DFR0548 &driver) : uBit{uBit}, driver{driver} {}
+Mouse::Mouse(MicroBit &uBit, Firmware::Drivers::DFR0548 &driver)
+    : uBit{uBit}, driver{driver}, front_pid(uBit.timer, "fl", 20, 0, 10),
+      left_pid(uBit.timer, "l", 20, 0, 10), right_pid(uBit.timer, "r", 20, 0, 10)
+{
+}
 
 void Mouse::Run()
 {
@@ -38,6 +42,8 @@ void Mouse::Debug()
 
     this->uBit.serial.printf("----------------------", "\n");
 }
+
+void Mouse::Perp() { float distance_front_diff = distance_fl - distance_fr; }
 
 // UpdateVector() assumes the compass heading is correct
 void Mouse::UpdateAcceleration()
