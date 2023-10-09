@@ -1,3 +1,5 @@
+#pragma once
+
 #include <functional>
 
 #include <MicroBit.h>
@@ -48,6 +50,9 @@ public:
 
     //! Reset the timer
     inline void Reset() { system_timer_cancel_event(MICROBIT_ID_MICROBROS_TIMER, id); }
+
+    //! Override if the timer is a oneshot
+    inline void SetOneshot(bool oneshot) { this->oneshot = oneshot; }
 
 private:
     uint16_t id;
