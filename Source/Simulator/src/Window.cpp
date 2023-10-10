@@ -327,6 +327,9 @@ void Window::DrawMazeWindow()
     ImGui::SameLine();
     if (ImGui::Button("Reset")) // Shift+F5
         maze->Reset();
+    ImGui::SameLine();
+    ImGui::Checkbox("Return", &maze->GetMouse()->ReturnStart());
+
     if (!algorithms.empty())
     {
         if (ImGui::BeginCombo("Algorithm", algorithms[algorithm].c_str(), ImGuiComboFlags_None))

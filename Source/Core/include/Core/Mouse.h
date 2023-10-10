@@ -51,6 +51,8 @@ public:
         this->y = y;
         this->rot = rot;
     }
+    //! Get if the mouse should be returning to start
+    inline bool &ReturnStart() noexcept { return return_start; }
 
 protected:
     std::unique_ptr<Algorithm> algorithm{nullptr};
@@ -58,5 +60,6 @@ protected:
     float x{0.0};
     float y{0.0};
     float rot{0.0};
+    bool return_start{false};
 };
 } // namespace Core

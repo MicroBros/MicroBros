@@ -1,6 +1,7 @@
 #include <array>
 
 #include "Core/Algorithm.h"
+#include "Core/Mouse.h"
 
 namespace Core::Algorithms
 {
@@ -12,9 +13,9 @@ namespace Core::Algorithms
 class WallFollower : public Algorithm
 {
 public:
-    WallFollower(int width, int height) {}
+    WallFollower(Mouse *mouse, int width, int height) {}
 
-    std::optional<Direction> Step(Maze *maze, int x, int y, Direction direction)
+    std::optional<Direction> Step(Mouse *mouse, int x, int y, Direction direction)
     {
         // Get the global back, left and right directions
         Direction left_direction{direction.TurnLeft()};
@@ -26,7 +27,7 @@ public:
                                                  back_direction};
 
         // Get the current tile
-        auto &tile{maze->GetTile(x, y)};
+        auto &tile{mouse->GetMaze()->GetTile(x, y)};
 
         // Try the four directions in order and see if one can move there
         for (auto &try_direction : direction_order)

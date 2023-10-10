@@ -7,13 +7,14 @@
 namespace Core::Algorithms
 {
 
-FloodFill::FloodFill(int width, int height) : width{width}, height{height}, tiles(width * height, 0)
+FloodFill::FloodFill(Mouse *mouse, int width, int height)
+    : width{width}, height{height}, tiles(width * height, 0)
 {
 }
 
-std::optional<Direction> FloodFill::Step(Maze *maze, int x, int y, Direction direction)
+std::optional<Direction> FloodFill::Step(Mouse *mouse, int x, int y, Direction direction)
 {
-    Flood(maze, false);
+    Flood(mouse->GetMaze(), mouse->ReturnStart());
 
     // Get the global back, left and right directions
     Direction left_direction{direction.TurnLeft()};
@@ -25,7 +26,7 @@ std::optional<Direction> FloodFill::Step(Maze *maze, int x, int y, Direction dir
                                              back_direction};
 
     // Get the current tile
-    auto &tile{maze->GetTile(x, y)};
+    auto &tile{mouse->GetMaze()->GetTile(x, y)};
 
     // Try the four directions in order and see if one can move there
     auto min_value{std::numeric_limits<Value>::max()};
@@ -121,7 +122,7 @@ void FloodFill::Flood(Maze *maze, bool to_start)
     }
 }
 
-std::optional<std::string> FloodFill::GetText(Maze *maze, int x, int y)
+std::optional<std::string> FloodFill::GetText(Mouse *mouse, int x, int y)
 {
     return std::to_string(GetValue(x, y));
 }

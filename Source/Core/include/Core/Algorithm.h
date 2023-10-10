@@ -9,6 +9,8 @@
 
 namespace Core
 {
+// Forward-decl
+class Mouse;
 
 /*! \brief Base class for algorithms
  *
@@ -21,9 +23,9 @@ public:
     virtual ~Algorithm() = default;
 
     //! Run a step with the Algorithm and get the direction relative to maze the mouse should move
-    virtual std::optional<Direction> Step(Maze *maze, int x, int y, Direction direction) = 0;
+    virtual std::optional<Direction> Step(Mouse *mouse, int x, int y, Direction direction) = 0;
     //! Get text for a tile, only used in Simulator
-    virtual std::optional<std::string> GetText(Maze *maze, int x, int y);
+    virtual std::optional<std::string> GetText(Mouse *mouse, int x, int y);
 };
 
 /*! \brief Registry class for algorithms
@@ -33,7 +35,7 @@ public:
 class AlgorithmRegistry
 {
 public:
-    using AlgorithmConstructor = std::function<Algorithm *(int x, int y)>;
+    using AlgorithmConstructor = std::function<Algorithm *(Mouse *mouse, int x, int y)>;
     using Registry = std::unordered_map<std::string, AlgorithmConstructor>;
 
     //! Algorithm registration function, used internally by REGISTER_ALGORITHM macro
@@ -47,4 +49,5 @@ public:
 // Add register macro for algorithms
 #define REGISTER_ALGORITHM(ALGORITHM)                                                              \
     bool ALGORITHM##Algorithm = AlgorithmRegistry::Register(                                       \
-        #ALGORITHM, [](int x, int y) -> Algorithm * { return new ALGORITHM(x, y); });
+        #ALGORITHM,                                                                                \
+        [](Mouse *mouse, int x, int y) -> Algorithm * { return new ALGORITHM(mouse, x, y); });

@@ -150,7 +150,9 @@ void SimulatorMaze::Step()
     auto &tile{maze->GetTile(x, y)};
 
     // For now just stop when Goal is found
-    if (tile.Contains(MazeTile::Goal))
+    bool is_returning{mouse->ReturnStart()};
+    if ((!is_returning && tile.Contains(MazeTile::Goal)) ||
+        is_returning && tile.Contains(MazeTile::Start))
         return;
 
     Core::Direction front_direction{mouse->GetDirection()};
@@ -160,7 +162,7 @@ void SimulatorMaze::Step()
         TraceWalls(front_direction, x, y);
 
     // Step the algorithm
-    auto move_direction{mouse->GetAlgorithm()->Step(mouse->GetMaze(), x, y, front_direction)};
+    auto move_direction{mouse->GetAlgorithm()->Step(mouse.get(), x, y, front_direction)};
     if (!move_direction.has_value())
         return fmt::println("No move direction returned by Algorithm!");
     Core::Direction direction{move_direction.value()};
@@ -266,7 +268,8 @@ void SimulatorMaze::Reset()
             fmt::format("Algorithm \"{}\" was not found in AlgorithmRegistry!", algorithm.value()));
 
     // Set the algorithm
-    mouse->SetAlgorithm(std::unique_ptr<Algorithm>(algorithm_constructor->second(width, height)));
+    mouse->SetAlgorithm(
+        std::unique_ptr<Algorithm>(algorithm_constructor->second(mouse.get(), width, height)));
 
     // Set up the default walls
     // Add the back wall if start is at 0,0
@@ -378,7 +381,7 @@ void SimulatorMaze::Draw(Utils::Texture *mouse_sprite)
                 }
 
                 // Check if the algorithm has text for the tile
-                auto text{mouse->GetAlgorithm()->GetText(mouse->GetMaze(), x, maze_y)};
+                auto text{mouse->GetAlgorithm()->GetText(mouse.get(), x, maze_y)};
                 if (text.has_value())
                 {
                     auto text_cstr{text.value().c_str()};

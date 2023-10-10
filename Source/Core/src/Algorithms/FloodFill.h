@@ -3,6 +3,7 @@
 #include <stack>
 
 #include "Core/Algorithm.h"
+#include "Core/Mouse.h"
 
 namespace Core::Algorithms
 {
@@ -23,15 +24,15 @@ public:
         int y;
     };
 
-    FloodFill(int width, int height);
+    FloodFill(Mouse *mouse, int width, int height);
 
-    std::optional<Direction> Step(Maze *maze, int x, int y, Direction direction);
+    std::optional<Direction> Step(Mouse *mouse, int x, int y, Direction direction);
 
     //! Run flood fill algorithm on current maze
     void Flood(Maze *maze, bool to_start);
 
     //! Debug text for tiles
-    std::optional<std::string> GetText(Maze *maze, int x, int y);
+    std::optional<std::string> GetText(Mouse *mouse, int x, int y);
 
 private:
     std::vector<Value> tiles;

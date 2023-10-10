@@ -1,6 +1,7 @@
 #include <array>
 
 #include "Core/Algorithm.h"
+#include "Core/Mouse.h"
 
 namespace Core::Algorithms
 {
@@ -16,12 +17,12 @@ using Visits = uint16_t;
 class WallFollower2 : public Algorithm
 {
 public:
-    WallFollower2(int width, int height)
+    WallFollower2(Mouse *mouse, int width, int height)
         : tiles{std::vector<Visits>(width * height)}, width{width}, height{height}
     {
     }
 
-    std::optional<Direction> Step(Maze *maze, int x, int y, Direction direction)
+    std::optional<Direction> Step(Mouse *mouse, int x, int y, Direction direction)
     {
         // Add a visit to current tile
         GetVisits(x, y) += 1;
@@ -36,7 +37,7 @@ public:
                                                  back_direction};
 
         // Get the current tile
-        auto &tile{maze->GetTile(x, y)};
+        auto &tile{mouse->GetMaze()->GetTile(x, y)};
 
         // Try the four directions in order and see if one can move there
         auto min_visits{std::numeric_limits<Visits>::max()};
@@ -82,7 +83,7 @@ public:
         return go_direction;
     }
 
-    std::optional<std::string> GetText(Maze *maze, int x, int y)
+    std::optional<std::string> GetText(Mouse *mouse, int x, int y)
     {
         return std::to_string(GetVisits(x, y));
     }

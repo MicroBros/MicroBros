@@ -3,7 +3,7 @@
 namespace Core
 {
 
-std::optional<std::string> Algorithm::GetText(Maze *maze, int x, int y) { return std::nullopt; }
+std::optional<std::string> Algorithm::GetText(Mouse *mouse, int x, int y) { return std::nullopt; }
 
 bool AlgorithmRegistry::Register(const std::string &name, AlgorithmConstructor constructor)
 {
