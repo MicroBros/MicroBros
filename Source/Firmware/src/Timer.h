@@ -52,7 +52,11 @@ public:
     inline void Reset() { system_timer_cancel_event(MICROBIT_ID_MICROBROS_TIMER, id); }
 
     //! Override if the timer is a oneshot
-    inline Timer *SetOneshot(bool oneshot) { this->oneshot = oneshot; }
+    inline Timer *SetOneshot(bool oneshot)
+    {
+        this->oneshot = oneshot;
+        return this;
+    }
 
 private:
     uint16_t id;

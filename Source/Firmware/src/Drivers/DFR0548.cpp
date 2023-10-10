@@ -78,9 +78,9 @@ inline int16_t Smooth(int16_t from, int16_t to, int16_t step) noexcept
 {
     if (to == from)
         return from;
-    if (to < 0 == from < 0)
+    if ((to < 0) == (from < 0))
     {
-        from = to;
+        return from = to;
     }
     else
     {
