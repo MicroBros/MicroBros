@@ -106,7 +106,8 @@ void Window::Run()
         // Run BLE logic
         try
         {
-            ble->Tick();
+            if (ble)
+                ble->Tick();
         }
         catch (const std::exception &e)
         {
@@ -257,11 +258,14 @@ void Window::Draw(bool &done)
     }
 
     // Remote connections
-    if (remote_connections_window)
+    if (ble)
     {
-        DrawRemoteConnections();
+        if (remote_connections_window)
+        {
+            DrawRemoteConnections();
+        }
+        ble->SetWindowOpen(remote_connections_window);
     }
-    ble->SetWindowOpen(remote_connections_window);
 
     // Remote motor control
     if (remote_motor_control_window)

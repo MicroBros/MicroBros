@@ -160,7 +160,7 @@ void SimulatorMaze::Step()
         TraceWalls(front_direction, x, y);
 
     // Step the algorithm
-    auto move_direction{mouse->GetAlgorithm()->Step(maze.get(), x, y, front_direction)};
+    auto move_direction{mouse->GetAlgorithm()->Step(mouse->GetMaze(), x, y, front_direction)};
     if (!move_direction.has_value())
         return fmt::println("No move direction returned by Algorithm!");
     Core::Direction direction{move_direction.value()};

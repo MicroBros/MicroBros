@@ -72,4 +72,21 @@ bool Maze::HasWall(int x, int y, Direction direction)
     }
 }
 
+MazeTile &Maze::GetTileAdjacent(int x, int y, Direction direction)
+{
+    int next_x{x};
+    int next_y{y};
+
+    if (direction.Value() == Direction::Up)
+        next_y++;
+    else if (direction.Value() == Direction::Right)
+        next_x++;
+    else if (direction.Value() == Direction::Down)
+        next_y--;
+    else if (direction.Value() == Direction::Left)
+        next_x--;
+
+    return GetTile(next_x, next_y);
+}
+
 } // namespace Core

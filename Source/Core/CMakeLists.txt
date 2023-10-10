@@ -4,6 +4,7 @@ add_library(Core OBJECT
     src/Maze.cpp
     src/Mouse.cpp
     # Algorithms
+    src/Algorithms/FloodFill.cpp src/Algorithms/FloodFill.h
     src/Algorithms/WallFollower.cpp
     src/Algorithms/WallFollower2.cpp
 )

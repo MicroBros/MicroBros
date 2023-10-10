@@ -114,6 +114,12 @@ public:
         return tiles[(width * y) + x];
     }
 
+    //! Get the adjacent tile in a direction
+    MazeTile &GetTileAdjacent(int x, int y, Direction direction);
+
+    //! Check if the coords are within bounds
+    inline bool WithinBounds(int x, int y) { return x >= 0 && x < width && y >= 0 && y < height; }
+
 private:
     int width;
     int height;
