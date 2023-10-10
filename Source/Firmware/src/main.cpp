@@ -61,3 +61,7 @@ int main()
 
     return 0;
 }
+
+/* Stubs to make linker stop throwing warnings for missing irrelevant functions */
+extern "C" void _fstat(void) {}
+extern "C" void _isatty(void) {}

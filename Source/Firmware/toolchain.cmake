@@ -135,7 +135,7 @@ list(JOIN LINKER_FLAGS " " LINKER_FLAGS)
 set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
-set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -T${PROJECT_ROOT}/ThirdParty/codal-microbit-v2/ld/nrf52833-softdevice.ld -Wl,--print-memory-usage")
+set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -T${PROJECT_ROOT}/ThirdParty/codal-microbit-v2/ld/nrf52833-softdevice.ld -Wl,--print-memory-usage -Wl,--no-warn-rwx-segments")
 
 function(microbit_executable TARGET)
     target_link_libraries(${TARGET} PUBLIC ThirdParty::codal-microbit-v2)
