@@ -4,8 +4,6 @@
 
 #include <MicroBit.h>
 
-extern MicroBit uBit;
-
 namespace Firmware
 {
 
@@ -18,58 +16,38 @@ Timer able to do periodic or oneshot timers using callbacks
 class Timer
 {
 public:
-    Timer(std::function<void()> callback, bool oneshot = false)
-        : callback{callback}, oneshot{oneshot}
-    {
-        // Keep track of the timers
-        static uint16_t base_id{0};
+    Timer(std::function<void()> callback);
 
-        // Setup the messagebus listening
-        id = base_id;
-        uBit.messageBus.listen(MICROBIT_ID_MICROBROS_TIMER, id, this, &Timer::TimerCallback);
-
-        // Increment the generated id
-        base_id++;
-    }
-
-    ~Timer() { Reset(); }
+    ~Timer();
 
     //! Make the timer fire off every \p interval ms
-    inline void EveryMs(uint64_t interval)
-    {
-        Reset();
-        system_timer_event_every(interval, MICROBIT_ID_MICROBROS_TIMER, id);
-    }
+    void EveryMs(CODAL_TIMESTAMP interval);
 
     //! Make the timer fire off every \p interval us
-    inline void EveryUs(uint64_t interval)
+    void EveryUs(CODAL_TIMESTAMP interval);
+
+    //! Make the oneshot timer fire off once after \p period ms
+    void AfterMs(CODAL_TIMESTAMP period);
+
+    //! Make the oneshot timer fire off once after \p period us
+    void AfterUs(CODAL_TIMESTAMP period);
+
+    //! True if the timer should self delete after next callback
+    inline Timer *SetSelfDelete(bool selfdelete)
     {
-        Reset();
-        system_timer_event_every_us(interval, MICROBIT_ID_MICROBROS_TIMER, id);
+        this->selfdelete = selfdelete;
+        return this;
     }
 
     //! Reset the timer
-    inline void Reset() { system_timer_cancel_event(MICROBIT_ID_MICROBROS_TIMER, id); }
-
-    //! Override if the timer is a oneshot
-    inline Timer *SetOneshot(bool oneshot)
-    {
-        this->oneshot = oneshot;
-        return this;
-    }
+    void Reset();
 
 private:
     uint16_t id;
     uint32_t interval;
     std::function<void()> callback;
-    bool oneshot{false};
+    bool selfdelete{false};
 
-    inline void TimerCallback(MicroBitEvent e)
-    {
-        callback();
-        if (oneshot)
-            Reset();
-    }
+    void TimerCallback(MicroBitEvent e);
 };
-
 }; // namespace Firmware
