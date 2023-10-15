@@ -5,7 +5,7 @@
 namespace Firmware
 {
 
-Mouse::Mouse(MicroBit &uBit, Firmware::Drivers::DFR0548* driver)
+Mouse::Mouse(MicroBit &uBit, Firmware::Drivers::DFR0548 *driver)
     : uBit{uBit}, driver{driver}, front_pid(uBit.timer, "fl", 20, 0, 10),
       left_pid(uBit.timer, "l", 20, 0, 10), right_pid(uBit.timer, "r", 20, 0, 10)
 {
