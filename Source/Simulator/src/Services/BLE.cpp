@@ -8,9 +8,7 @@
 // Start a new scan every second
 const uint64_t AUTO_SCAN_INTERVAL{1000};
 
-// Update the
-
-namespace Simulator
+namespace Simulator::Services
 {
 
 BLE::BLE()
@@ -126,4 +124,4 @@ bool BLE::ConnectablePeripheral(SimpleBLE::Peripheral &peripheral)
     return peripheral.identifier().rfind("BBC micro:bit", 0) == 0;
 }
 
-} // namespace Simulator
+} // namespace Simulator::Services

@@ -4,19 +4,19 @@
 #include <iostream>
 #include <memory>
 
-#include "Window.h"
-
-#include "BLE.h"
+#include "Application.h"
+#include "Services/BLE.h"
 
 int main(int argc, char *argv[])
 {
-    std::unique_ptr<Simulator::BLE> ble{nullptr};
-    std::optional<std::string> error;
-    // BLE needs to be initialised once here, or issues will arrise with
+    // BLE service needs to be initialised once here, or issues will arrise with
     // WinRT, THANKS MICROSOFT
+    Simulator::Services::BLE *ble{nullptr};
+    std::optional<std::string> error;
+
     try
     {
-        ble.reset(new Simulator::BLE());
+        ble = new Simulator::Services::BLE();
     }
     catch (const std::exception &e)
     {
@@ -24,27 +24,18 @@ int main(int argc, char *argv[])
     }
 
     // Read the args (minus the program) from argv
-    std::vector<std::string> args{argv + 1, argv + argc};
+    std::vector<std::string> args{argv, argv + argc};
 
     NFD_Init();
 
     try
     {
-        auto window = std::make_unique<Simulator::Window>(argv[0], std::move(ble));
+        auto application = std::make_unique<Simulator::Application>(args, ble);
 
-        // Parse command arguments
-        if (!args.empty())
-        {
-            // Check if the first argument is a .txt
-            if (std::filesystem::path(args[0]).extension() == ".txt")
-            {
-                window->OpenMaze(args[0]);
-            }
-        }
         if (error.has_value())
-            window->Error(error.value());
+            application->Error(error.value());
 
-        window->Run();
+        application->Run();
     }
     catch (std::exception &e)
     {

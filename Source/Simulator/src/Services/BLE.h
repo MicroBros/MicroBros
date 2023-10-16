@@ -5,14 +5,16 @@
 
 #include <simpleble/Adapter.h>
 
-namespace Simulator
+#include "Service.h"
+
+namespace Simulator::Services
 {
 
-/*! \brief BLE connection manager
+/*! \brief BLE connection Service
 
 Using SimpleBLE to manage Bluetooth LE connections to the Mouse
- */
-class BLE
+*/
+class BLE : public Service
 {
 public:
     BLE();
@@ -56,4 +58,4 @@ private:
     std::vector<SimpleBLE::Peripheral> peripherals;
 };
 
-}; // namespace Simulator
+}; // namespace Simulator::Services

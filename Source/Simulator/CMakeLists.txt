@@ -1,9 +1,20 @@
 add_executable(Simulator
-    src/BLE.cpp src/BLE.h
+    # Services
+    src/Services/BLE.cpp src/Services/BLE.h
+    src/Services/MainWindow.cpp src/Services/MainWindow.h
+    src/Services/Service.h
+    src/Services/Simulation.cpp src/Services/Simulation.h
+    # Windows
+    src/Windows/Controls.cpp
+    src/Windows/Maze.cpp
+    src/Windows/RemoteConnections.cpp
+    src/Windows/RemoteMotors.cpp
+    src/Windows/Window.cpp src/Windows/Window.h
+    # Misc
+    src/Application.cpp src/Application.h
     src/Main.cpp
-    src/SimulatorMaze.cpp src/SimulatorMaze.h
+    src/SimulatorMouse.h
     src/Utils.cpp src/Utils.h
-    src/Window.cpp src/Window.h
 )
 
 target_link_libraries(Simulator

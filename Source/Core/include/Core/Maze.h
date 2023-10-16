@@ -118,7 +118,15 @@ public:
     MazeTile &GetTileAdjacent(int x, int y, Direction direction);
 
     //! Check if the coords are within bounds
-    inline bool WithinBounds(int x, int y) { return x >= 0 && x < width && y >= 0 && y < height; }
+    inline bool WithinBounds(int x, int y) noexcept
+    {
+        return x >= 0 && x < width && y >= 0 && y < height;
+    }
+
+    //! Get width of Maze
+    inline int GetWidth() noexcept { return width; }
+    //! Get height of Maze
+    inline int GetHeight() noexcept { return height; }
 
 private:
     int width;
