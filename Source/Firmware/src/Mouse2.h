@@ -27,8 +27,8 @@ private:
     bool active;
 
     //! Distance measurements to front, left and right obstructions
-    float fl;
-    float fr;
+    float fl{0.0f};
+    float fr{0.0f};
     /*
     float l;
     float r;

@@ -12,7 +12,8 @@ Timer::Timer(std::function<void()> callback) : callback{callback}
 
     // Setup the messagebus listening
     id = base_id;
-    uBit.messageBus.listen(MICROBIT_ID_MICROBROS_TIMER, id, this, &Timer::TimerCallback);
+    uBit.messageBus.listen(MICROBIT_ID_MICROBROS_TIMER, id, this, &Timer::TimerCallback,
+                           MESSAGE_BUS_LISTENER_IMMEDIATE);
 
     // Increment the generated id
     base_id++;

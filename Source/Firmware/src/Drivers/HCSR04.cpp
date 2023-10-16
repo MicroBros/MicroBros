@@ -8,7 +8,7 @@ namespace Firmware::Drivers
 {
 
 HCSR04::HCSR04(std::vector<Sensor> sensors, uint16_t measurement_interval)
-    : sensors{std::move(sensors)}, measurement_interval{measurement_interval}
+    : sensors{sensors}, measurement_interval{measurement_interval}
 {
     // Setup trigger timer
     timer = std::make_unique<Timer>([this]() { this->Run(); });
@@ -37,14 +37,16 @@ void HCSR04::Run()
 
 void HCSR04::OnPulse(Event event)
 {
-    for (auto &sensor : sensors)
+    for (size_t i{0}; i < sensors.size(); ++i)
     {
+        auto &sensor{sensors[i]};
+
         if (sensor.echo_pin.id != event.source)
             continue;
         //  Duration of the pulse in us
         uint64_t us = event.timestamp;
         // Formula is us/58 per datasheets, clamp between 2-400cm
-        *sensors[idx].value = std::clamp(us / 58.0f, 2.0f, 400.0f);
+        *(sensors[i].value) = std::clamp(us / 58.0f, 2.0f, 400.0f);
 
         last_measurement = uBit.timer.getTime();
     }
