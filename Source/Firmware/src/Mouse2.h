@@ -22,6 +22,7 @@ public:
 private:
     MicroBit &uBit;
     Drivers::DFR0548 *driver;
+    std::unique_ptr<Drivers::HCSR04> ultrasonics;
 
     bool active;
 

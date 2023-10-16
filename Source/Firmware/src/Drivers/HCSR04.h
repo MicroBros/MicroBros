@@ -26,6 +26,8 @@ class HCSR04
 public:
     struct Sensor
     {
+        //! echo_pin is the PIN where the common *Echo *signals are sent
+        NRF52Pin &echo_pin;
         //! Pin for the trigger for sensor module
         NRF52Pin &trig_pin;
         //! Value to update with the distance in cm
@@ -33,12 +35,11 @@ public:
     };
 
     /*! \brief Constructor for HCSR04
-        - \p echo_pin is the PIN where the common *Echo* signals are sent
         - \p sensors is a vector of pins for *Trig* (Trigger) and a pointer to value to update
        with a float distance in (cm) as argument
         - \p measurement_interval How often in milliseconds a sensor should be triggered
      */
-    HCSR04(NRF52Pin &echo_pin, std::vector<Sensor> sensors, uint16_t measurement_interval = 60);
+    HCSR04(std::vector<Sensor> sensors, uint16_t measurement_interval = 60);
 
     //! Returns true if the last measurement was done within the interval
     bool IsMeasuring();
@@ -50,7 +51,6 @@ private:
     //! Event handler for high pulses
     void OnPulse(Event event);
 
-    NRF52Pin &echo_pin;
     std::vector<Sensor> sensors;
     std::unique_ptr<Timer> timer;
     CODAL_TIMESTAMP last_measurement;

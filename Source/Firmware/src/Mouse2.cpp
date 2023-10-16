@@ -6,10 +6,10 @@ namespace Firmware
 Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
     : uBit{uBit}, driver{driver}, front_pid("f", 20, 0, 10), left_right_pid("lr", 20, 0, 10)
 {
-    std::vector<Drivers::HCSR04::Sensor> fl_sensor = {{.trig_pin = uBit.io.P1, .value = &fl}};
-    std::vector<Drivers::HCSR04::Sensor> fr_sensor = {{.trig_pin = uBit.io.P8, .value = &fr}};
-    front_left = std::make_unique<Drivers::HCSR04>(uBit.io.P0, fl_sensor);
-    front_right = std::make_unique<Drivers::HCSR04>(uBit.io.P2, fr_sensor);
+    std::vector<Drivers::HCSR04::Sensor> sensor_pins = {
+        {.echo_pin = uBit.io.P2, .trig_pin = uBit.io.P8, .value = &fl},
+        {.echo_pin = uBit.io.P0, .trig_pin = uBit.io.P1, .value = &fr}};
+    ultrasonics = std::make_unique<Drivers::HCSR04>(sensor_pins);
     measurement_interval_ms = front_left->GetMeasurementInterval();
 }
 
@@ -20,6 +20,7 @@ void Mouse2::Run()
     {
         active = false;
         driver->StopMotors();
+        fiber_sleep(1);
     }
 
     if (!active)

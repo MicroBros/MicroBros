@@ -24,7 +24,7 @@ int main()
 
     LOG_INFO("Initialised MicroMouse!");
 
-    release_fiber();
+    // release_fiber();
 
     while (1)
     {
