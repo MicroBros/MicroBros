@@ -5,7 +5,7 @@
 
 #include "BLE/MotorService.h"
 #include "Drivers/DFR0548.h"
-#include "Mouse.h"
+#include "Mouse2.h"
 
 MicroBit uBit;
 
@@ -20,10 +20,16 @@ int main()
     // Setup BLE services
     auto motor_service{std::make_unique<Firmware::BLE::MotorService>(dfr0548.get())};
 
+    auto mouse{std::make_unique<Firmware::Mouse2>(uBit, dfr0548.get())};
+
     LOG_INFO("Initialised MicroMouse!");
 
     release_fiber();
 
+    while (1)
+    {
+        mouse->Run();
+    }
     /*while (1)
     {
         mouse.Run();

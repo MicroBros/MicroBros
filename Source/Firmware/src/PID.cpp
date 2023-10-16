@@ -5,27 +5,18 @@
 namespace Firmware
 {
 
-PID::PID(codal::Timer &t, std::string name, float Kp, float Ki, float Kd)
-    : t{t}, name{name}, Kp{Kp}, Ki{Ki}, Kd{Kd}
-{
-    previous_time_ms = t.getTime();
-}
+PID::PID(std::string name, float Kp, float Ki, float Kd) : name{name}, Kp{Kp}, Ki{Ki}, Kd{Kd} {}
 
-float PID::Regulate(float target, float current, CODAL_TIMESTAMP current_time_ms)
+float PID::Regulate(float target, float current, uint16_t measurement_interval_ms)
 {
 
-    float delta_time_ms = current_time_ms - previous_time_ms;
     float error = target - current;
     float delta_error = error - previous_error;
+    float dt_s = measurement_interval_ms / 1000;
 
     P = Kp * error;
-    I += (Ki * error) * delta_time_ms;
-
-    if (delta_time_ms > 0)
-    {
-        D = (Kd * delta_error) / delta_time_ms;
-    }
-    previous_time_ms = t.getTime();
+    I += (Ki * error) * dt_s;
+    D = (Kd * delta_error) / dt_s;
 
     return P + I + D;
 }

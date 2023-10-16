@@ -3,7 +3,7 @@ add_executable(Firmware
     src/Drivers/DFR0548.cpp src/Drivers/DFR0548.h
     src/Drivers/HCSR04.cpp src/Drivers/HCSR04.h
     src/main.cpp
-    src/Mouse.cpp src/Mouse.h
+    src/Mouse2.cpp src/Mouse2.h
     src/PID.cpp src/PID.h
     src/Timer.cpp src/Timer.h
     src/Utils.h

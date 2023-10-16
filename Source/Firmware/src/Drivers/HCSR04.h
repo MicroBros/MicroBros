@@ -42,6 +42,7 @@ public:
 
     //! Returns true if the last measurement was done within the interval
     bool IsMeasuring();
+    inline uint16_t GetMeasurementInterval() { return measurement_interval; }
 
 private:
     //! Run a measurement
