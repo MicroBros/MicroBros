@@ -19,11 +19,19 @@ public:
     Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver);
     void Run();
 
+    //! Get if the mouse should be running
+    inline bool IsRunning() noexcept { return running; }
+    //! Set if the mouse is running
+    inline void SetRunning(bool running) noexcept { this->running = running; }
+
 private:
     MicroBit &uBit;
     Drivers::DFR0548 *driver;
     std::unique_ptr<Drivers::HCSR04> ultrasonics;
     float MAZE_SIZE = 16.0f;
+
+    //! True if the Mouse2 is running autonomously, set false for manual control
+    bool running{false};
 
     //! Distance measurements to front, left and right obstructions
     float f{0.0f};

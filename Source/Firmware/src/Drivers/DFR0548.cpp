@@ -72,16 +72,18 @@ DFR0548::DFR0548(MicroBit &uBit, MicroBitI2C &i2c, uint16_t pca9685_address)
 
     timer = std::make_unique<Firmware::Timer>([this]() { this->Update(); });
     timer->EveryMs(8);
+
+    StopMotors();
 }
 
 inline int16_t Smooth(int16_t from, int16_t to, int16_t step) noexcept
 {
     if (to == from)
         return from;
-    if ((to < 0) == (from < 0))
+    /*if ((to < 0) == (from < 0))
     {
         return from = to;
-    }
+    }*/
     else
     {
         if (to > from)

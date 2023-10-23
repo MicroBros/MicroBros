@@ -8,6 +8,8 @@
 #define MICROBIT_BLE_UUID(uuid) fmt::format("e95d{:04x}-251d-470a-a062-fa1922dfa9a8", uuid)
 //! Get the namespaced ident for BLE structure for service
 #define BLE_STRUCTURE(service, struct) Core::Comm::service::struct
+//! Get the UUID for a service
+#define BLE_SERVICE_UUID(service) Core::Comm::service::UUID
 //! Get the index for the Characteristic
 #define CHARACTERISTIC(service, name)                                                              \
     static_cast<uint16_t>(Core::Comm::service::Characteristics::name)
@@ -29,6 +31,10 @@
 #define MICROBIT_BLE_CHARACTERISTIC_UUID(service, characteristic)                                  \
     MICROBIT_BLE_UUID(CHARACTERISTIC_UUID(service, characteristic))
 
+//! Generate the charactisitics offsets
+#define IMPL_CHARACTERISTIC(C)                                                                     \
+    inline int16_t CharacteristicUuid(C c) { return UUID + static_cast<int16_t>(c) + 1; }
+
 namespace Core::Comm
 {
 
@@ -44,17 +50,7 @@ enum class Characteristics : uint8_t
     Motors = 0,
     Count = 1,
 };
-
-inline int16_t CharacteristicUuid(Characteristics c)
-{
-    switch (c)
-    {
-    case Characteristics::Motors:
-        return UUID + 1;
-    default:
-        abort();
-    }
-}
+IMPL_CHARACTERISTIC(Characteristics)
 
 //! Struct for Motor values
 struct Motors
@@ -70,5 +66,43 @@ struct Motors
 };
 
 }; // namespace MotorService
+
+//! BLE structures and IDs related to Firmware::BLE::MouseService
+namespace MouseService
+{
+
+const uint16_t UUID = 0x0110;
+
+//! BLE Characteristics for MouseService
+enum class Characteristics : uint8_t
+{
+    Control = 0,
+    Step,
+    GetAlgorithmCount,
+    GetAlgorithm,
+    Position,
+    Maze,
+    Count,
+};
+IMPL_CHARACTERISTIC(Characteristics)
+
+//! Struct holding information about updating mouse parameters
+struct MouseControl
+{
+    bool running;
+    bool returning;
+    uint16_t algorithm;
+    float speed_factor;
+};
+
+//! Updated data from mouse containing position and rotation
+struct MousePosition
+{
+    float x;
+    float y;
+    float rot;
+};
+
+}; // namespace MouseService
 
 }; // namespace Core::Comm

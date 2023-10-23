@@ -1,5 +1,6 @@
 add_executable(Firmware
     src/BLE/MotorService.cpp src/BLE/MotorService.h
+    src/BLE/MouseService.cpp src/BLE/MouseService.h
     src/Drivers/DFR0548.cpp src/Drivers/DFR0548.h
     src/Drivers/HCSR04.cpp src/Drivers/HCSR04.h
     src/main.cpp

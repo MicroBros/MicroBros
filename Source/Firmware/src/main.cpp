@@ -4,6 +4,7 @@
 #include <Core/Log.h>
 
 #include "BLE/MotorService.h"
+#include "BLE/MouseService.h"
 #include "Drivers/DFR0548.h"
 #include "Mouse2.h"
 
@@ -17,18 +18,30 @@ int main()
     auto dfr0548{std::make_unique<Firmware::Drivers::DFR0548>(uBit, uBit.i2c)};
     // Firmware::Mouse mouse(uBit, dfr0548);
 
+    // Create mouse impl
+    auto mouse{std::make_unique<Firmware::Mouse2>(uBit, dfr0548.get())};
+
     // Setup BLE services
     auto motor_service{std::make_unique<Firmware::BLE::MotorService>(dfr0548.get())};
-
-    auto mouse{std::make_unique<Firmware::Mouse2>(uBit, dfr0548.get())};
+    auto mouse_service{std::make_unique<Firmware::BLE::MouseService>(mouse.get())};
 
     LOG_INFO("Initialised MicroMouse!");
 
-    // release_fiber();
-
+    // Used for button A toggle
+    bool last_pressed{false};
     while (1)
     {
-        mouse->Run();
+        if (mouse->IsRunning())
+            mouse->Run();
+
+        // Simple toggle of running by pressing A
+        if (!last_pressed && uBit.buttonA.isPressed())
+        {
+            mouse->SetRunning(!mouse->IsRunning());
+            last_pressed = true;
+        }
+        else
+            last_pressed = false;
     }
     /*while (1)
     {
