@@ -127,6 +127,8 @@ public:
     inline int GetWidth() noexcept { return width; }
     //! Get height of Maze
     inline int GetHeight() noexcept { return height; }
+    //! Get alias to maze vector
+    inline const std::vector<MazeTile> &Data() noexcept { return tiles; }
 
 private:
     int width;

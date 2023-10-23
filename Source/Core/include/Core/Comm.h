@@ -78,8 +78,9 @@ enum class Characteristics : uint8_t
 {
     Control = 0,
     Step,
+    Reset,
     GetAlgorithmCount,
-    GetAlgorithm,
+    GetAlgorithmName,
     Position,
     Maze,
     Count,
@@ -91,7 +92,8 @@ struct MouseControl
 {
     bool running;
     bool returning;
-    uint16_t algorithm;
+    int16_t algorithm;
+    int16_t current_algorithm;
     float speed_factor;
 };
 

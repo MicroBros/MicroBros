@@ -26,9 +26,14 @@ public:
 
     //! Callback for when BLE data has been written
     void onDataWritten(const microbit_ble_evt_write_t *params);
+    //! Callback for when BLE data is being read
+    void onDataRead(microbit_onDataRead_t *params);
 
     //! Update the values of the mouse
     void Update();
+
+    //! Run a notify on Maze
+    void MazeUpdate();
 
 protected:
     inline int characteristicCount() { return CHARACTERISTICS_COUNT(MouseService); };
