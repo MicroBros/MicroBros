@@ -6,12 +6,12 @@ namespace Firmware
 
 template <typename T> inline T Clamp(T min, T max, T value)
 {
-    if (value < min)
+    if (value <= min)
     {
         return min;
     }
 
-    else if (value > max)
+    else if (value >= max)
     {
         return max;
     }

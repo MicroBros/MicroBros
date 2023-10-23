@@ -12,11 +12,10 @@ float PID::Regulate(float target, float current, uint16_t measurement_interval_m
 
     float error = target - current;
     float delta_error = error - previous_error;
-    float dt_s = measurement_interval_ms / 1000;
 
     P = Kp * error;
-    I += (Ki * error) * dt_s;
-    D = (Kd * delta_error) / dt_s;
+    I += (Ki * error) * measurement_interval_ms;
+    D = (Kd * delta_error) / measurement_interval_ms;
 
     return P + I + D;
 }
@@ -24,6 +23,7 @@ float PID::Regulate(float target, float current, uint16_t measurement_interval_m
 void Firmware::PID::Debug()
 {
     LOG("Name: {}\t", name);
+    LOG("DT: {}\t", measurement_interval_ms);
     LOG("P: {}\t", P);
     LOG("I: {}\t", I);
     LOG("D: {}\t", D);

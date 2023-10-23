@@ -24,23 +24,12 @@ private:
     Drivers::DFR0548 *driver;
     std::unique_ptr<Drivers::HCSR04> ultrasonics;
 
-    bool active;
+    bool active = false;
 
     //! Distance measurements to front, left and right obstructions
-    float fl{0.0f};
-    float fr{0.0f};
-    /*
-    float l;
-    float r;
-    */
-
-    //! Delta distance measurements to front, left and right obstructions
-    float dfl = 0.0;
-    float dfr = 0.0;
-    /*
-    float dl = 0.0;
-    float dr = 0.0;
-    */
+    float f{0.0f};
+    float l{0.0f};
+    float r{0.0f};
 
     uint16_t measurement_interval_ms;
 
@@ -49,13 +38,11 @@ private:
     uint16_t bl_pwm = 2048;
     uint16_t br_pwm = 2048;
 
-    std::unique_ptr<Drivers::HCSR04> front_left;
-    std::unique_ptr<Drivers::HCSR04> front_right;
-
     PID left_right_pid;
     PID front_pid;
 
     void PerpFront();
+    void CenterSides();
 };
 
 } // namespace Firmware
