@@ -9,7 +9,8 @@ namespace Simulator
 Application::Application(std::vector<std::string> args, Services::BLE *ble)
 {
     // Register services
-    RegisterService(ble);                                     // BLE
+    if (ble != nullptr)
+        RegisterService(ble);                                 // BLE
     RegisterService(new Services::MainWindow(this, args[0])); // Main Window
     RegisterService(new Services::Simulation(this));          // Simulation
 

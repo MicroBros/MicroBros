@@ -65,6 +65,8 @@ bool Mouse::SetAlgorithm(size_t index)
     // Construct the algorithm
     algorithm =
         std::unique_ptr<Algorithm>(it->second(this, GetMaze()->GetWidth(), GetMaze()->GetHeight()));
+
+    return true;
 }
 
 void Mouse::Reset()

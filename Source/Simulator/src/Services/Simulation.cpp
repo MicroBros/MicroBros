@@ -167,6 +167,9 @@ void Simulation::Step()
     if (!mouse)
         return;
 
+    if (!mouse->GetAlgorithm())
+        return;
+
     // Update the step time
     last_step = SDL_GetTicks();
 

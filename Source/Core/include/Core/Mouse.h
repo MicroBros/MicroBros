@@ -27,9 +27,13 @@ public:
 
     //! Reset the state of the mouse
     void Reset();
-    //! Set the Algorithm the Mouse will use
+    //! \brief Set the Algorithm the Mouse will use
+    //!
+    //! \returns Returns true if the algorithm was set
     bool SetAlgorithm(const std::string value);
-    //! Set the Algorithm to the one at the index
+    //! \brief Set the Algorithm to the one at \p index in AlgorithmRegistry
+    //!
+    //! \returns Returns true if the algorithm was set
     bool SetAlgorithm(size_t index);
     //! Get the Algorithm for the Mouse
     inline Algorithm *GetAlgorithm() noexcept { return algorithm.get(); }
