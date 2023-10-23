@@ -6,10 +6,11 @@ namespace Firmware
 {
 
 Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
-    : uBit{uBit}, driver{driver}, front_pid("f", 5, 0, 0), left_right_pid("lr", 25, 0, 0)
+    : uBit{uBit}, driver{driver}, forward_pid("f", -25, 0, 0), right_pid("lr", 50, 0, 0),
+      rot_pid("rot", 0, 0, 250)
 {
     std::vector<Drivers::HCSR04::Sensor> sensor_pins = {
-        //{.echo_pin = uBit.io.P0, .trig_pin = uBit.io.P2, .value = &f},
+        {.echo_pin = uBit.io.P0, .trig_pin = uBit.io.P2, .value = &f},
         {.echo_pin = uBit.io.P8, .trig_pin = uBit.io.P1, .value = &r},
         {.echo_pin = uBit.io.P13, .trig_pin = uBit.io.P14, .value = &l}};
 
@@ -19,30 +20,19 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
 
 void Mouse2::Run()
 {
-    LOG_INFO("f: {}, l: {}, r: {}", f, l, r);
-    LOG_INFO("measure={}", measurement_interval_ms);
+    // if (iter % 500000 == 0)
+    //{
 
-    if (l <= 4 || r <= 4)
-    {
-        active = false;
-        driver->StopMotors();
-        return;
-    }
-
-    if (!active)
-    {
-        bl_pwm = 2048;
-        fl_pwm = 2048;
-        br_pwm = 2048;
-        fr_pwm = 2048;
-    }
-    else
-    {
-        // PerpFront();
-        CenterSides();
-        driver->SetMotors(bl_pwm, fl_pwm, br_pwm, fr_pwm);
-    }
-    active = true;
+    LOG("Iter:{}", iter);
+    LOG("Distances: f={}\t l={}\t, r={}\n", f, l, r);
+    LOG("DT={}\n", measurement_interval_ms);
+    Forward();
+    PerpFront();
+    CenterSides();
+    SetPWM();
+    //}
+    ++iter;
+    driver->SetMotors(bl_pwm, fl_pwm, br_pwm, fr_pwm);
 }
 
 /*
@@ -58,16 +48,38 @@ void Mouse2::PerpFront()
 }
 */
 
+void Mouse2::SetPWM()
+{
+    float denominator{
+        std::max(std::abs(forward_pwm) + std::abs(right_pwm) + std::abs(rot_pwm), 1.0f)};
+    fr_pwm = static_cast<int16_t>((forward_pwm - right_pwm - rot_pwm) / denominator * 4095.0f);
+    br_pwm = static_cast<int16_t>((forward_pwm + right_pwm - rot_pwm) / denominator * 4095.0f);
+    fl_pwm = static_cast<int16_t>((forward_pwm + right_pwm + rot_pwm) / denominator * 4095.0f);
+    bl_pwm = static_cast<int16_t>((forward_pwm - right_pwm + rot_pwm) / denominator * 4095.0f);
+    LOG("SetPWM: fr={}\tbr={}\tfl={}\tbl={}\n", fr_pwm, br_pwm, fl_pwm, bl_pwm);
+}
+
+void Mouse2::Forward()
+{
+    float target = 4.0;
+    forward_pwm = forward_pid.Regulate(target, f, measurement_interval_ms);
+    forward_pid.Debug();
+}
+
+// Measures diff between left and right readings, sets right_pwm
 void Mouse2::CenterSides()
 {
     float diff = l - r;
-    int pwm = left_right_pid.Regulate(0, diff, measurement_interval_ms);
-    fl_pwm += pwm;
-    bl_pwm -= pwm;
-    fr_pwm -= pwm;
-    br_pwm += pwm;
-    LOG_INFO("Center_PWM: fl={}, bl={}, fr={}, br={}", fl_pwm, bl_pwm, fr_pwm, br_pwm);
-    left_right_pid.Debug();
+    right_pwm = right_pid.Regulate(0, diff, measurement_interval_ms);
+    right_pid.Debug();
+}
+
+void Mouse2::PerpFront()
+{
+
+    float diff = l - r;
+    rot_pwm = rot_pid.Regulate(0, diff, measurement_interval_ms);
+    rot_pid.Debug();
 }
 
 } // namespace Firmware

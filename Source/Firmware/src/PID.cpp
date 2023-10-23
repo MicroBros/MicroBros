@@ -9,7 +9,7 @@ PID::PID(std::string name, float Kp, float Ki, float Kd) : name{name}, Kp{Kp}, K
 
 float PID::Regulate(float target, float current, uint16_t measurement_interval_ms)
 {
-
+    this->measurement_interval_ms = measurement_interval_ms;
     float error = target - current;
     float delta_error = error - previous_error;
 
@@ -22,6 +22,7 @@ float PID::Regulate(float target, float current, uint16_t measurement_interval_m
 
 void Firmware::PID::Debug()
 {
+
     LOG("Name: {}\t", name);
     LOG("DT: {}\t", measurement_interval_ms);
     LOG("P: {}\t", P);

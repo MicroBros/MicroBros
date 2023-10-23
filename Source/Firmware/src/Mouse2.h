@@ -23,26 +23,33 @@ private:
     MicroBit &uBit;
     Drivers::DFR0548 *driver;
     std::unique_ptr<Drivers::HCSR04> ultrasonics;
-
-    bool active = false;
+    float MAZE_SIZE = 16.0f;
 
     //! Distance measurements to front, left and right obstructions
     float f{0.0f};
     float l{0.0f};
     float r{0.0f};
 
+    int iter = 0;
+
     uint16_t measurement_interval_ms;
 
-    uint16_t fl_pwm = 2048;
-    uint16_t fr_pwm = 2048;
-    uint16_t bl_pwm = 2048;
-    uint16_t br_pwm = 2048;
+    float forward_pwm = 0.0f;
+    float right_pwm = 0.0f;
+    float rot_pwm = 0.0f;
+    uint16_t fl_pwm;
+    uint16_t fr_pwm;
+    uint16_t bl_pwm;
+    uint16_t br_pwm;
 
-    PID left_right_pid;
-    PID front_pid;
+    PID rot_pid;
+    PID right_pid;
+    PID forward_pid;
 
     void PerpFront();
     void CenterSides();
+    void Forward();
+    void SetPWM();
 };
 
 } // namespace Firmware
