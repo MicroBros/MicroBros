@@ -98,7 +98,7 @@ public:
             int n;
             auto kb_state{SDL_GetKeyboardState(&n)};
 
-            float speed{speed / 4095.0f};
+            float speed{this->speed / 4095.0f};
 
             // Directions
             if (kb_state[SDL_SCANCODE_W])
