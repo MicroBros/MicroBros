@@ -5,6 +5,8 @@
 
 #include <math.h>
 
+#include <deque>
+
 #include "Drivers/DFR0548.h"
 #include "Drivers/HCSR04.h"
 #include "PID.h"
@@ -20,10 +22,20 @@ public:
     void Run();
 
 private:
+    //! External class objects
     MicroBit &uBit;
     Drivers::DFR0548 *driver;
     std::unique_ptr<Drivers::HCSR04> ultrasonics;
-    float MAZE_SIZE = 16.0f;
+    int sensor_count;
+    uint64_t prev_time_ms;
+    //! Filtering-related variables
+    std::deque<float> distance_queue; // Saving latest distance readings for filtering reasons
+    static const int FILTER_SIZE = 3; // Number of readings for moving average
+    static const float THRESHOLD = 0.05; // Change in distance threshold
+    static const int DEBOUNCE_COUNT = 3; // Number of continous increases before stopping
+    float prevAverageDistance = 0;
+    int increasingCount = 0;
+    const float MAZE_SIZE = 16.0f;
 
     //! Distance measurements to front, left and right obstructions
     float f{0.0f};
@@ -50,6 +62,11 @@ private:
     void CenterSides();
     void Forward();
     void SetPWM();
+
+    void TurnRight();
+    bool FindMinima();
+
+    float MovingAverageFilter(float distance);
 };
 
 } // namespace Firmware
