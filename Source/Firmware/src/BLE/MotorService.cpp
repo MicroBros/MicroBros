@@ -9,10 +9,11 @@ MotorService::MotorService(Drivers::DFR0548 *driver) : driver{driver}
 {
     // Register the BLE service
     RegisterBaseUUID(bs_base_uuid);
-    CreateService(0x0100);
+    CreateService(BLE_SERVICE_UUID(MotorService));
 
     // Setup characteristics
-    CreateCharacteristic(CHARACTERISTIC(MotorService, Motors), 0x0100 + 1, (uint8_t *)&motors,
+    CreateCharacteristic(CHARACTERISTIC(MotorService, Motors),
+                         CHARACTERISTIC_UUID(MotorService, Motors), (uint8_t *)&motors,
                          sizeof(BLE_STRUCTURE(MotorService, Motors)),
                          sizeof(BLE_STRUCTURE(MotorService, Motors)),
                          microbit_propWRITE | microbit_propWRITE_WITHOUT);

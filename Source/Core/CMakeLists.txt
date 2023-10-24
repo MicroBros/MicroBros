@@ -1,8 +1,11 @@
 add_library(Core OBJECT
-    src/Algorithm.cpp
-    src/Log.cpp
-    src/Maze.cpp
-    src/Mouse.cpp
+    include/Core/Bitflags.h
+    include/Core/Comm.h
+
+    src/Algorithm.cpp include/Core/Algorithm.h
+    src/Log.cpp include/Core/Log.h
+    src/Maze.cpp include/Core/Maze.h
+    src/Mouse.cpp include/Core/Mouse.h
     # Algorithms
     src/Algorithms/FloodFill.cpp src/Algorithms/FloodFill.h
     src/Algorithms/WallFollower.cpp

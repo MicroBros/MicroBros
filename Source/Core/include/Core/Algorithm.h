@@ -36,9 +36,11 @@ class AlgorithmRegistry
 {
 public:
     using AlgorithmConstructor = std::function<Algorithm *(Mouse *mouse, int x, int y)>;
-    using Registry = std::unordered_map<std::string, AlgorithmConstructor>;
+    using Registry = std::map<std::string, AlgorithmConstructor>;
 
     //! Algorithm registration function, used internally by REGISTER_ALGORITHM macro
+    //!
+    //! \attention Do not call after static initialization, that will screw the algorithm indexes!
     static bool Register(const std::string &name, AlgorithmConstructor constructor);
     //! Access the registry of Algorithm registrated
     static Registry &GetRegistry();

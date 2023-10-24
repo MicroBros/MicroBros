@@ -19,7 +19,26 @@ class Mouse2 : public Core::Mouse
 {
 public:
     Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver);
+    //! Run regulation for movement, ran until movement is done
     void Run();
+
+    //! \brief Start a single step
+    //!
+    //! In short a step is taking a sensor reading in ideal position, doing an algorithm step and
+    //! then moving to there for the next ideal sensor reading spot
+    void Step();
+
+    //! Reset the Mouse satte
+    void Reset();
+
+    //! Get if the mouse is running (auto-execute steps)
+    inline bool IsRunning() noexcept { return running; }
+    //! Set if the mouse is running
+    inline void SetRunning(bool running) noexcept { this->running = running; }
+    //! Return if the mouse is currently finishing a move/step
+    inline bool IsMoving() noexcept { return IsRunning(); }
+    //! Set algorithm to be used after reset
+    inline void SetResetAlgorithm(uint16_t index) noexcept { algorithm = index; }
 
 private:
     //! External class objects
@@ -36,6 +55,11 @@ private:
     float prevAverageDistance = 0;
     int increasingCount = 0;
     const float MAZE_SIZE = 16.0f;
+
+    //! True if the Mouse2 is running autonomously, set false for manual control
+    bool running{false};
+    //! Set the algorithm to use on reset, > 0
+    int16_t algorithm{-1};
 
     //! Distance measurements to front, left and right obstructions
     float f{0.0f};

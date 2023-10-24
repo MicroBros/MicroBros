@@ -18,6 +18,9 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
     prev_time_ms = uBit.timer.getTime();
     ultrasonics = std::make_unique<Drivers::HCSR04>(sensor_pins);
     measurement_interval_ms = ultrasonics->GetMeasurementInterval();
+
+    // TODO: Uncomment when tested, this will initialise FloodFill as default algorithm
+    // SetAlgorithm("FloodFill");
 }
 
 void Mouse2::Run()
@@ -41,6 +44,22 @@ void Mouse2::Run()
 
     //
     ++iter;
+}
+
+void Mouse2::Step()
+{
+    // TODO: This will start a step, basically the time from a sensor reading until the mouse is
+    // going to do the next one updating the map
+    // In short, it is a one tile move
+}
+
+void Mouse2::Reset()
+{
+    Mouse::Reset();
+
+    // Update algorithm if set manually
+    if (algorithm >= 0)
+        SetAlgorithm(algorithm);
 }
 
 void Mouse2::SetPWM()
@@ -87,7 +106,6 @@ void Mouse2::TurnRight()
 bool Mouse2::FindMinima()
 {
     prevAverageDistance = f;
-    TurnRight();
 
     while (true)
     {

@@ -152,9 +152,7 @@ void Simulation::Reset()
     mouse->Reset();
 
     // Set the algorithm for the Mouse
-    mouse->SetAlgorithm(
-        std::unique_ptr<Algorithm>(AlgorithmRegistry::GetRegistry()[algorithms[algorithm]](
-            mouse.get(), mouse->GetMaze()->GetWidth(), mouse->GetMaze()->GetHeight())));
+    mouse->SetAlgorithm(algorithms[algorithm]);
 
     // Set up the default walls
     // Add the back wall if start is at 0,0
@@ -167,6 +165,9 @@ void Simulation::Step()
 {
     // Stop if no mouse
     if (!mouse)
+        return;
+
+    if (!mouse->GetAlgorithm())
         return;
 
     // Update the step time

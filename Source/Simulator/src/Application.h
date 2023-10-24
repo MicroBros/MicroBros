@@ -61,6 +61,15 @@ public:
                 fmt::format("Unable to find Service of type \"{}\"", typeid(S).name()));
     }
 
+    //! Get service, but will return nullptr if not found
+    template <typename S> inline S *GetServiceNullable()
+    {
+        if (auto service = services.find(typeid(S).hash_code()); service != services.end())
+            return dynamic_cast<S *>((*service).second);
+        else
+            return nullptr;
+    }
+
     template <typename W> inline W *GetWindow()
     {
         if (auto window = windows.find(W::ID); window != windows.end())

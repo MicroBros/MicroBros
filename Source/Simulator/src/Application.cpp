@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "Services/BLE.h"
 #include "Services/MainWindow.h"
+#include "Services/RemoteMouses.h"
 #include "Services/Simulation.h"
 
 namespace Simulator
@@ -9,8 +10,10 @@ namespace Simulator
 Application::Application(std::vector<std::string> args, Services::BLE *ble)
 {
     // Register services
-    RegisterService(ble);                                     // BLE
+    if (ble != nullptr)
+        RegisterService(ble);                                 // BLE
     RegisterService(new Services::MainWindow(this, args[0])); // Main Window
+    RegisterService(new Services::RemoteMouses(this));        // Remote mouses
     RegisterService(new Services::Simulation(this));          // Simulation
 
     // Open txt as maze file as first argument

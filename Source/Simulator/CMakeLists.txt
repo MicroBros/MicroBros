@@ -2,6 +2,7 @@ add_executable(Simulator
     # Services
     src/Services/BLE.cpp src/Services/BLE.h
     src/Services/MainWindow.cpp src/Services/MainWindow.h
+    src/Services/RemoteMouses.cpp src/Services/RemoteMouses.h
     src/Services/Service.h
     src/Services/Simulation.cpp src/Services/Simulation.h
     # Windows

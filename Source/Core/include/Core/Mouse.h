@@ -27,11 +27,14 @@ public:
 
     //! Reset the state of the mouse
     void Reset();
-    //! Set the Algorithm the Mouse will use
-    inline void SetAlgorithm(std::unique_ptr<Algorithm> value) noexcept
-    {
-        algorithm = std::move(value);
-    }
+    //! \brief Set the Algorithm the Mouse will use
+    //!
+    //! \returns Returns true if the algorithm was set
+    bool SetAlgorithm(const std::string value);
+    //! \brief Set the Algorithm to the one at \p index in AlgorithmRegistry
+    //!
+    //! \returns Returns true if the algorithm was set
+    bool SetAlgorithm(size_t index);
     //! Get the Algorithm for the Mouse
     inline Algorithm *GetAlgorithm() noexcept { return algorithm.get(); }
     //! Get the Maze for the Mouse
@@ -53,6 +56,8 @@ public:
     }
     //! Get if the mouse should be returning to start
     inline bool &ReturnStart() noexcept { return return_start; }
+    //! Give the index to get current algorithm in AlgorithmRegistry, returns -1 if uninitialized
+    int16_t GetAlgorithmIndex() noexcept { return current_algorithm_index; }
 
 protected:
     std::unique_ptr<Algorithm> algorithm{nullptr};
@@ -61,5 +66,6 @@ protected:
     float y{0.0};
     float rot{0.0};
     bool return_start{false};
+    int16_t current_algorithm_index{-1};
 };
 } // namespace Core
