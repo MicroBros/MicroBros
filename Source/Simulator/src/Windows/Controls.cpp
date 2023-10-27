@@ -46,9 +46,9 @@ public:
                                        ->ReturnStart()); // TODO: Ensure this also works over remote
 
         auto algorithms{simulator_mouse->GetAlgorithms()};
-        if (!algorithms.empty())
+        size_t current_algorithm{simulator_mouse->GetAlgorithm()};
+        if (!algorithms.empty() && algorithms.size() > current_algorithm)
         {
-            size_t current_algorithm{simulator_mouse->GetAlgorithm()};
             if (ImGui::BeginCombo("Algorithm", algorithms[current_algorithm].c_str(),
                                   ImGuiComboFlags_None))
             {

@@ -88,9 +88,6 @@ public:
                 fmt::format("Unable to find Window of id \"{}\"", static_cast<int>(id)));
     }
 
-    //! Get the Mouse, can be nullptr
-    Core::Mouse *GetMouse();
-
     //! Get the SimulatorMouse, can be nullptr
     SimulatorMouse *GetSimulatorMouse();
 

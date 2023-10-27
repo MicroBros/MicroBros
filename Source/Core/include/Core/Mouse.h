@@ -58,6 +58,8 @@ public:
     inline bool &ReturnStart() noexcept { return return_start; }
     //! Give the index to get current algorithm in AlgorithmRegistry, returns -1 if uninitialized
     int16_t GetAlgorithmIndex() noexcept { return current_algorithm_index; }
+    //! Reset the maze with another one
+    inline void SetMaze(Maze *new_maze) noexcept { maze.reset(new_maze); }
 
 protected:
     std::unique_ptr<Algorithm> algorithm{nullptr};

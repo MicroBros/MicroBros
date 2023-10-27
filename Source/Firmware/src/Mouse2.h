@@ -49,10 +49,10 @@ private:
     uint64_t prev_time_ms; // Value of last time reading
 
     // Filtering-related variables
-    std::deque<float> distance_queue;    // Saving latest distance readings for filtering reasons
-    static const int FILTER_SIZE = 3;    // Number of readings for moving average
-    static const float THRESHOLD = 0.05; // Change in distance threshold
-    static const int DEBOUNCE_COUNT = 3; // Number of continous increases before stopping
+    std::deque<float> distance_queue; // Saving latest distance readings for filtering reasons
+    static const int FILTER_SIZE = 3; // Number of readings for moving average
+    static constexpr float THRESHOLD = 0.05f; // Change in distance threshold
+    static const int DEBOUNCE_COUNT = 3;      // Number of continous increases before stopping
     float prevAverageDistance = 0;
     int increasingCount = 0;
     const float MAZE_SIZE = 16.0f;

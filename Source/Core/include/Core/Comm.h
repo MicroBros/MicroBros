@@ -18,6 +18,7 @@
 //! Get the Characteristic count
 #define CHARACTERISTICS_COUNT(service) static_cast<int>(Core::Comm::service::Characteristics::Count)
 //! BLE structure size check for CODAL
+#ifdef FIRMWARE
 #define BLE_SIZE_CHECK(service, struct)                                                            \
     if (params->len != sizeof(BLE_STRUCTURE(service, struct)))                                     \
     {                                                                                              \
@@ -25,15 +26,29 @@
                   sizeof(BLE_STRUCTURE(service, struct)));                                         \
         return;                                                                                    \
     }
+#else
+#define BLE_SIZE_CHECK(service, struct, size)                                                      \
+    if (size != sizeof(BLE_STRUCTURE(service, struct)))                                            \
+    {                                                                                              \
+        LOG_ERROR("Incorrect size of {}, got: {}, expected: {}", #struct, size,                    \
+                  sizeof(BLE_STRUCTURE(service, struct)));                                         \
+        return;                                                                                    \
+    }
+#endif
 //! Get the MicroBit UUID String for service
 #define MICROBIT_BLE_SERVICE_UUID(service) MICROBIT_BLE_UUID(Core::Comm::service::UUID)
 //! Get the MicroBit UUID String for service characteristic
 #define MICROBIT_BLE_CHARACTERISTIC_UUID(service, characteristic)                                  \
     MICROBIT_BLE_UUID(CHARACTERISTIC_UUID(service, characteristic))
 
+#define MICROBIT_BLE_SERVICE_CHARACTERISTIC(service, characteristic)                               \
+    MICROBIT_BLE_SERVICE_UUID(service), MICROBIT_BLE_CHARACTERISTIC_UUID(service, characteristic)
+
 //! Generate the charactisitics offsets
 #define IMPL_CHARACTERISTIC(C)                                                                     \
     inline int16_t CharacteristicUuid(C c) { return UUID + static_cast<int16_t>(c) + 1; }
+
+#define INT_FLOAT_DIV 1024.0f
 
 namespace Core::Comm
 {
@@ -77,8 +92,7 @@ const uint16_t UUID = 0x0110;
 enum class Characteristics : uint8_t
 {
     Control = 0,
-    Step,
-    Reset,
+    Action,
     GetAlgorithmCount,
     GetAlgorithmName,
     Position,
@@ -87,22 +101,33 @@ enum class Characteristics : uint8_t
 };
 IMPL_CHARACTERISTIC(Characteristics)
 
+//! Algorithm count type
+using AlgorithmCount = uint16_t;
+
+//! MouseAction
+enum class MouseAction : uint8_t
+{
+    Reset = 0,
+    Step
+};
+
 //! Struct holding information about updating mouse parameters
 struct MouseControl
 {
-    bool running;
-    bool returning;
-    int16_t algorithm;
-    int16_t current_algorithm;
-    float speed_factor;
+    int16_t algorithm{0};
+    int16_t current_algorithm{0};
+    int16_t speed_factor{1024};
+    bool running{false};
+    bool returning{false};
 };
 
 //! Updated data from mouse containing position and rotation
 struct MousePosition
 {
-    float x;
-    float y;
-    float rot;
+    int16_t x;
+    int16_t y;
+    int16_t rot;
+    bool moving;
 };
 
 }; // namespace MouseService

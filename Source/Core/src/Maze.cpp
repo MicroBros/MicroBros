@@ -1,4 +1,5 @@
 #include "Core/Maze.h"
+#include "Core/Log.h"
 
 namespace Core
 {
@@ -32,6 +33,26 @@ std::string_view Direction::ToString()
 Maze::Maze(int width, int height)
     : tiles{std::vector<MazeTile>(width * height)}, width{width}, height{height}
 {
+}
+
+Maze::Maze(int width, int height, std::span<MazeTile::ValueType> data)
+    : tiles{std::vector<MazeTile>(width * height)}, width{width}, height{height}
+{
+    if (data.size() != (width * height))
+    {
+#ifdef FIRMWARE
+        LOG_ERROR("Invalid maze data size: {}, expected: {}", data.size(), width * height);
+        return;
+#else
+        throw std::runtime_error(
+            fmt::format("Invalid maze data size: {}, expected: {}", data.size(), width * height));
+#endif
+    }
+    else
+    {
+        // Copy data over
+        tiles.assign(data.begin(), data.end());
+    }
 }
 
 void Maze::ResetWalls()

@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <cmath>
+
 #include <Core/Algorithm.h>
 #include <Core/Log.h>
 
@@ -5,6 +8,9 @@
 
 namespace Firmware::BLE
 {
+
+// Dummy char, used for empty charactistics
+static uint8_t dummy;
 
 MouseService::MouseService(Mouse2 *mouse) : mouse{mouse}
 {
@@ -19,34 +25,37 @@ MouseService::MouseService(Mouse2 *mouse) : mouse{mouse}
                          sizeof(BLE_STRUCTURE(MouseService, MouseControl)),
                          sizeof(BLE_STRUCTURE(MouseService, MouseControl)),
                          microbit_propWRITE | microbit_propWRITE_WITHOUT | microbit_propREAD |
-                             microbit_propREADAUTH);
-    // Step
-    CreateCharacteristic(CHARACTERISTIC(MouseService, Step),
-                         CHARACTERISTIC_UUID(MouseService, Step), nullptr, 0, 0,
-                         microbit_propWRITE | microbit_propWRITE_WITHOUT);
-
-    // Reset
-    CreateCharacteristic(CHARACTERISTIC(MouseService, Reset),
-                         CHARACTERISTIC_UUID(MouseService, Reset), nullptr, 0, 0,
+                             microbit_propREADAUTH | microbit_propNOTIFY);
+    // Action
+    CreateCharacteristic(CHARACTERISTIC(MouseService, Action),
+                         CHARACTERISTIC_UUID(MouseService, Action), &dummy, 1, 1,
                          microbit_propWRITE | microbit_propWRITE_WITHOUT);
 
     // GetAlgorithmCount
+    static BLE_STRUCTURE(MouseService, AlgorithmCount) algorithm_count =
+        Core::AlgorithmRegistry::GetRegistry().size();
     CreateCharacteristic(CHARACTERISTIC(MouseService, GetAlgorithmCount),
-                         CHARACTERISTIC_UUID(MouseService, GetAlgorithmCount), nullptr, 0, 0,
-                         microbit_propREAD | microbit_propREADAUTH);
+                         CHARACTERISTIC_UUID(MouseService, GetAlgorithmCount),
+                         (uint8_t *)&algorithm_count, sizeof(algorithm_count),
+                         sizeof(algorithm_count), microbit_propREAD | microbit_propREADAUTH);
     // GetAlgorithmName
     CreateCharacteristic(CHARACTERISTIC(MouseService, GetAlgorithmName),
-                         CHARACTERISTIC_UUID(MouseService, GetAlgorithmName), nullptr, 0, 0,
-                         microbit_propREAD | microbit_propREADAUTH);
+                         CHARACTERISTIC_UUID(MouseService, GetAlgorithmName),
+                         (uint8_t *)algorithm_name_buffer.data(),
+                         algorithm_name_buffer.size() * sizeof(algorithm_name_buffer[0]),
+                         algorithm_name_buffer.size() * sizeof(algorithm_name_buffer[0]),
+                         microbit_propREAD | microbit_propREADAUTH | microbit_propWRITE |
+                             microbit_propWRITE_WITHOUT);
     // Position
     CreateCharacteristic(CHARACTERISTIC(MouseService, Position),
                          CHARACTERISTIC_UUID(MouseService, Position), (uint8_t *)&position,
-                         sizeof(BLE_STRUCTURE(MouseService, MousePosition)),
-                         sizeof(BLE_STRUCTURE(MouseService, MousePosition)),
+                         sizeof(position), sizeof(position),
                          microbit_propREAD | microbit_propREADAUTH | microbit_propNOTIFY);
     // Maze
     CreateCharacteristic(CHARACTERISTIC(MouseService, Maze),
-                         CHARACTERISTIC_UUID(MouseService, Maze), nullptr, 0, 0,
+                         CHARACTERISTIC_UUID(MouseService, Maze), tile_values.data(),
+                         tile_values.size() * sizeof(tile_values[0]),
+                         tile_values.size() * sizeof(tile_values[0]),
                          microbit_propREAD | microbit_propREADAUTH | microbit_propNOTIFY);
 }
 
@@ -56,69 +65,82 @@ void MouseService::onDataWritten(const microbit_ble_evt_write_t *params)
     {
         BLE_SIZE_CHECK(MouseService, MouseControl);
 
-        control = *(BLE_STRUCTURE(MouseService, MouseControl) *)params->data;
+        BLE_STRUCTURE(MouseService, MouseControl) *
+            control_ptr{(BLE_STRUCTURE(MouseService, MouseControl) *)params->data};
+        control = *control_ptr;
         // Update mouse
         if (mouse->IsRunning() != control.running)
             mouse->SetRunning(control.running);
         mouse->ReturnStart() = control.returning;
         mouse->SetResetAlgorithm(control.algorithm);
     }
-    else if (params->handle == valueHandle(CHARACTERISTIC(MouseService, Step)))
-    {
-        mouse->SetRunning(false);
-
-        // Wait until not running (finished movement)
-        while (mouse->IsMoving())
-        {
-            fiber_sleep(50);
-        }
-
-        mouse->Step();
-    }
-    else if (params->handle == valueHandle(CHARACTERISTIC(MouseService, Reset)))
-    {
-        mouse->SetRunning(false);
-        mouse->Reset();
-    }
-}
-
-void MouseService::onDataRead(microbit_onDataRead_t *params)
-{
-    // Return amount of algorithms
-    if (params->handle == valueHandle(CHARACTERISTIC(MouseService, GetAlgorithmCount)))
-    {
-        static int16_t algorithm_count;
-        algorithm_count = Core::AlgorithmRegistry::GetRegistry().size();
-        params->data = (const uint8_t *)&algorithm_count;
-        params->length = sizeof(algorithm_count);
-    }
-    // Get algorithm at offset
     else if (params->handle == valueHandle(CHARACTERISTIC(MouseService, GetAlgorithmName)))
     {
+        BLE_SIZE_CHECK(MouseService, AlgorithmCount);
+
+        algorithm_index = *(BLE_STRUCTURE(MouseService, AlgorithmCount) *)params->data;
+
         auto registry{Core::AlgorithmRegistry::GetRegistry()};
 
         auto it = registry.begin();
-        for (size_t i{0}; i < params->offset; ++i)
+        for (size_t i{0}; i < algorithm_index; ++i)
         {
             it++;
 
             // Return if OOB
             if (it == registry.end())
             {
-                params->length = 0;
+                algorithm_name_buffer[0] = '\0';
                 return;
             }
         }
 
-        // Return name in string
-        params->data = (const uint8_t *)it->first.c_str();
-        params->length = it->first.size();
+        // Copy algorithm name
+        std::copy_n(it->first.begin(), std::min(it->first.size(), size_t(MAX_ALGORITHM_NAME)),
+                    algorithm_name_buffer.begin());
+
+        algorithm_name_buffer[std::min(it->first.size(), size_t(MAX_ALGORITHM_NAME))] = '\0';
     }
-    else if (params->handle == valueHandle(CHARACTERISTIC(MouseService, Maze)))
+    else if (params->handle == valueHandle(CHARACTERISTIC(MouseService, Action)))
     {
-        auto tiles{mouse->GetMaze()->Data()};
-        params->data = (const uint8_t *)tiles.data();
-        params->length = sizeof(tiles[0]) * tiles.size();
+        BLE_SIZE_CHECK(MouseService, MouseAction);
+
+        auto action{*(BLE_STRUCTURE(MouseService, MouseAction) *)params->data};
+
+        switch (action)
+        {
+        // Reset
+        case BLE_STRUCTURE(MouseService, MouseAction)::Reset:
+            mouse->SetRunning(false);
+            mouse->Reset();
+
+            break;
+        // Step
+        case BLE_STRUCTURE(MouseService, MouseAction)::Step:
+            mouse->SetRunning(false);
+
+            // Wait until not running (finished movement)
+            while (mouse->IsMoving())
+            {
+                fiber_sleep(50);
+            }
+
+            LOG_INFO("[BLE] Step");
+
+            mouse->Step();
+
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void MouseService::onDataRead(microbit_onDataRead_t *params)
+{
+    if (params->handle == valueHandle(CHARACTERISTIC(MouseService, Maze)))
+    {
+        UpdateTiles();
     }
 }
 
@@ -139,11 +161,30 @@ void MouseService::Update()
     }
 
     // Update position of mouse
-    position.x = mouse->X();
-    position.y = mouse->Y();
-    position.rot = mouse->Rot();
+    position.moving = mouse->IsMoving();
+    position.x = mouse->X() * INT_FLOAT_DIV;
+    position.y = mouse->Y() * INT_FLOAT_DIV;
+    position.rot = mouse->Rot() * INT_FLOAT_DIV;
     notifyChrValue(CHARACTERISTIC(MouseService, Position), (const uint8_t *)&position,
                    sizeof(position));
+}
+
+void MouseService::UpdateTiles()
+{
+    auto tiles{mouse->GetMaze()->Data()};
+
+    // Update size if needed
+    if (tiles.size() != tile_values.size())
+    {
+        LOG_ERROR("[BLE] Only 16x16 mazes are supported");
+        return;
+    }
+
+    // Update copy values
+    for (size_t i{0}; i < tiles.size(); ++i)
+    {
+        tile_values[i] = tiles[i].Value();
+    }
 }
 
 void MouseService::MazeUpdate()
@@ -152,9 +193,10 @@ void MouseService::MazeUpdate()
     if (!getConnected())
         return;
 
-    auto tiles{mouse->GetMaze()->Data()};
-    notifyChrValue(CHARACTERISTIC(MouseService, Maze), (const uint8_t *)tiles.data(),
-                   sizeof(tiles[0]) * tiles.size());
+    UpdateTiles();
+
+    notifyChrValue(CHARACTERISTIC(MouseService, Maze), (const uint8_t *)tile_values.data(),
+                   sizeof(Core::MazeTile::ValueType) * tile_values.size());
 }
 
 }; // namespace Firmware::BLE

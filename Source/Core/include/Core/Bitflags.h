@@ -12,8 +12,9 @@
     }                                                                                              \
     ;                                                                                              \
                                                                                                    \
-private:                                                                                           \
     using ValueType = std::underlying_type_t<Flags>;                                               \
+                                                                                                   \
+private:                                                                                           \
     ValueType value;                                                                               \
                                                                                                    \
 public:                                                                                            \
@@ -44,5 +45,6 @@ public:                                                                         
     {                                                                                              \
         return (this->value & value.value) == value.value;                                         \
     }                                                                                              \
+    inline ValueType Value() const noexcept { return value; }                                      \
     }                                                                                              \
     ;
