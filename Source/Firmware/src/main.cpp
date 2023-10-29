@@ -34,9 +34,10 @@ int main()
         if (mouse->IsRunning() || mouse->IsMoving())
         {
             mouse->Run();
-            // Send update over BLE
-            mouse_service->Update();
         }
+
+        // Send update over BLE
+        mouse_service->Update();
 
         // Simple toggle of running by pressing A
         if (!last_pressed && uBit.buttonA.isPressed())

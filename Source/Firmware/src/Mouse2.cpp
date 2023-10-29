@@ -19,8 +19,8 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
     ultrasonics = std::make_unique<Drivers::HCSR04>(sensor_pins);
     measurement_interval_ms = ultrasonics->GetMeasurementInterval();
 
-    // TODO: Uncomment when tested, this will initialise FloodFill as default algorithm
-    // SetAlgorithm("FloodFill");
+    // Initialise FloodFill as default algorithm
+    SetAlgorithm("FloodFill");
 }
 
 void Mouse2::Run()
@@ -59,7 +59,10 @@ void Mouse2::Reset()
 
     // Update algorithm if set manually
     if (algorithm >= 0)
-        SetAlgorithm(algorithm);
+    {
+        if (!SetAlgorithm(algorithm))
+            LOG_ERROR("Error setting algorithm: {}", algorithm);
+    }
 }
 
 void Mouse2::SetPWM()

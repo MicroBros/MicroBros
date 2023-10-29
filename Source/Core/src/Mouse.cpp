@@ -52,7 +52,7 @@ bool Mouse::SetAlgorithm(size_t index)
 {
     auto registry{AlgorithmRegistry::GetRegistry()};
 
-    AlgorithmRegistry::Registry::iterator it;
+    auto it{registry.begin()};
     for (size_t i{0}; i < index; ++i)
     {
         if (it == registry.end())

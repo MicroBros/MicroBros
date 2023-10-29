@@ -118,6 +118,17 @@ std::optional<SimpleBLE::Peripheral> BLE::GetActive()
     return std::nullopt;
 }
 
+std::optional<SimpleBLE::Peripheral> BLE::GetByAddress(SimpleBLE::BluetoothAddress address)
+{
+    for (auto &peripheral : peripherals)
+    {
+        if (peripheral.address() == address && peripheral.is_connected())
+            return peripheral;
+    }
+
+    return std::nullopt;
+}
+
 bool BLE::ConnectablePeripheral(SimpleBLE::Peripheral &peripheral)
 {
     // Only allow micro:bit BLEs for now

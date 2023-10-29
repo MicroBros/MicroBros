@@ -1,16 +1,27 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "cmake",
-			"label": "Build Firmware",
-			"command": "build",
-			"targets": [
-				"Firmware"
-			],
-			"group": "build",
-			"problemMatcher": [],
-			"detail": "CMake template build task"
-		}
-	]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cmake",
+            "label": "Build Firmware",
+            "command": "build",
+            "targets": [
+                "Firmware"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "CMake template build task"
+        },
+        {
+            "type": "cmake",
+            "label": "Build Simulator",
+            "command": "build",
+            "targets": [
+                "Simulator"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "CMake template build task"
+        }
+    ]
 }

@@ -35,11 +35,29 @@ void Application::Run()
     {
         // Tick all the services
         for (const auto &[_, service] : services)
-            service->Tick();
+        {
+            try
+            {
+                service->Tick();
+            }
+            catch (const std::exception &e)
+            {
+                Error(e.what());
+            }
+        }
 
         // Tick all the windows
         for (const auto &[_, window] : windows)
-            window->Tick();
+        {
+            try
+            {
+                window->Tick();
+            }
+            catch (const std::exception &e)
+            {
+                Error(e.what());
+            }
+        }
     }
 }
 
@@ -47,16 +65,13 @@ void Application::Error(std::string err) { errors.push(err); }
 
 SimulatorMouse *Application::GetSimulatorMouse()
 {
+    auto remote_mouses{GetService<Services::RemoteMouses>()};
+    auto active_remote_mouse{remote_mouses->GetActiveRemoteMouse()};
+    if (active_remote_mouse != nullptr)
+        return active_remote_mouse;
+
     // TODO: Remote mouse
     return GetService<Services::Simulation>();
-}
-
-Core::Mouse *Application::GetMouse()
-{
-    auto sim_mouse{GetSimulatorMouse()};
-    if (!sim_mouse)
-        return nullptr;
-    return sim_mouse->GetMouse();
 }
 
 Application::~Application()

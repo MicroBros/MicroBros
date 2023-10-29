@@ -33,6 +33,8 @@ public:
     void SetActive(SimpleBLE::Peripheral &peripheral);
     //! Get the SimpleBLE::Peripheral that is active, if there is one
     std::optional<SimpleBLE::Peripheral> GetActive();
+    //! Get the SimpleBLE::Peripheral by BluetoothAddress, if there is one
+    std::optional<SimpleBLE::Peripheral> GetByAddress(SimpleBLE::BluetoothAddress address);
     //! Checks if the BLE peripheral is active
     inline bool IsActive(SimpleBLE::Peripheral &peripheral)
     {
@@ -53,7 +55,7 @@ private:
     bool autoscan{true};
     bool window_open{false};
     uint64_t last_scan{0};
-    std::string active_peripheral;
+    SimpleBLE::BluetoothAddress active_peripheral;
     std::unique_ptr<SimpleBLE::Adapter> adapter{nullptr};
     std::vector<SimpleBLE::Peripheral> peripherals;
 };

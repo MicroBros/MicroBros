@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <fmt/format.h>
+#include <span>
 #include <stddef.h>
 #include <stdexcept>
 #include <vector>
@@ -93,9 +94,16 @@ private:
  */
 class Maze
 {
+private:
+    int width;
+    int height;
+    std::vector<MazeTile> tiles;
+
 public:
     //! Create a empty new maze with the width and height specified
     Maze(int width, int height);
+    //! Create a maze with existing data and the width and height specified
+    Maze(int width, int height, std::span<MazeTile::ValueType> data);
 
     //! Reset the walls of the maze
     void ResetWalls();
@@ -129,11 +137,6 @@ public:
     inline int GetHeight() noexcept { return height; }
     //! Get alias to maze vector
     inline const std::vector<MazeTile> &Data() noexcept { return tiles; }
-
-private:
-    int width;
-    int height;
-    std::vector<MazeTile> tiles;
 };
 
 } // namespace Core
