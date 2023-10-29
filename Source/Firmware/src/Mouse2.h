@@ -88,8 +88,9 @@ private:
     void Forward();
     void SetPWM();
 
-    void TurnRight();
-    bool FindMinima();
+    void Turn(char direction);
+    void FindMaxima();
+    void FindMinima();
 
     float MovingAverageFilter(float distance);
 };

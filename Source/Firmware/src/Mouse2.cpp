@@ -95,18 +95,58 @@ void Mouse2::PerpFront()
     rot_pid.Debug();
 }
 
-void Mouse2::TurnRight()
+void Mouse2::Turn(char direction)
 {
-    fr_pwm = -2048;
-    br_pwm = -2048;
-    fl_pwm = 2048;
-    bl_pwm = 2048;
+    if (direction == 'r')
+    {
+        fr_pwm = -2048;
+        br_pwm = -2048;
+        fl_pwm = 2048;
+        bl_pwm = 2048;
+    }
+    else
+    {
+        fr_pwm = 2048;
+        br_pwm = 2048;
+        fl_pwm = -2048;
+        bl_pwm = -2048;
+    }
+
+    SetPWM();
+    driver->SetMotors(bl_pwm, fl_pwm, br_pwm, fr_pwm);
+    FindMaxima();
+    FindMinima();
 }
 
-bool Mouse2::FindMinima()
+void Mouse2::FindMaxima()
 {
+
+    prevAverageDistance = f;
+    while (true)
+    {
+        float avg_distance = MovingAverageFilter(f);
+        if (avg_distance < prevAverageDistance + THRESHOLD)
+        {
+            ++increasingCount;
+            if (increasingCount + DEBOUNCE_COUNT)
+            {
+                break;
+            }
+        }
+        else
+        {
+            increasingCount = 0;
+        }
+        prevAverageDistance = 0;
+    }
+}
+
+void Mouse2::FindMinima()
+{
+
     prevAverageDistance = f;
 
+    // End phase that breaks when shortest distance (perp angle) is found
     while (true)
     {
         float avg_distance = MovingAverageFilter(f);
