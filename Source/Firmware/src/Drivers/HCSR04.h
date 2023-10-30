@@ -52,8 +52,8 @@ private:
     void OnPulse(Event event);
 
     std::vector<Sensor> sensors;
+    std::vector<CODAL_TIMESTAMP> last_measurements;
     std::unique_ptr<Timer> timer;
-    CODAL_TIMESTAMP last_measurement;
     uint16_t measurement_interval;
     uint16_t idx{0};
 };
