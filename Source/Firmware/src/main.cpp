@@ -8,6 +8,9 @@
 #include "Drivers/DFR0548.h"
 #include "Mouse2.h"
 
+// TEMP
+#include "Drivers/HCSR04.h"
+#include "Drivers/IR.h"
 MicroBit uBit;
 
 int main()
@@ -19,7 +22,7 @@ int main()
     // Firmware::Mouse mouse(uBit, dfr0548);
 
     // Create mouse impl
-    auto mouse{std::make_unique<Firmware::Mouse2>(uBit, dfr0548.get())};
+    // auto mouse{std::make_unique<Firmware::Mouse2>(uBit, dfr0548.get())};
 
     // Setup BLE services
     // auto motor_service{std::make_unique<Firmware::BLE::MotorService>(dfr0548.get())};
@@ -30,9 +33,33 @@ int main()
     // Used for button A toggle
     // bool last_pressed{false};
 
+    static float f;
+    static float b;
+
+    std::vector<Firmware::Drivers::HCSR04::Sensor> hcsr04_pins = {
+        {.echo_pin = uBit.io.P13, .trig_pin = uBit.io.P14, .value = &f},
+        {.echo_pin = uBit.io.P15, .trig_pin = uBit.io.P16, .value = &b}};
+
+    auto hcsr04{std::make_unique<Firmware::Drivers::HCSR04>(hcsr04_pins)};
+
+    static float l;
+    static float r;
+
+    std::vector<Firmware::Drivers::IR::Sensor> ir_pins = {
+        {.sense_pin = uBit.io.P1, .value = &l, .base = 360, .scale = 0.01f, .exp = 1.181f},
+        {.sense_pin = uBit.io.P2, .value = &r, .base = 360, .scale = 0.01f, .exp = 1.181f}};
+
+    auto ir{std::make_unique<Firmware::Drivers::IR>(ir_pins, uBit.io.P0)};
+
     while (1)
     {
-        mouse->Run();
+        auto start{uBit.timer.getTime()};
+        ir->RunSignalProcessing();
+        LOG_INFO("front(US)={:.1f}cm, back(US)={:.1f}cm, left(IR)={:.1f}cm, right(IR)={:.1f}cm (IR "
+                 "DSP time={}ms)",
+                 f, b, l, r, uBit.timer.getTime() - start);
+        fiber_sleep(100);
+        // mouse->Run();
     }
 
     /*

@@ -6,6 +6,7 @@
 
 #include <MicroBit.h>
 
+#include "../Filters.h"
 #include "../Timer.h"
 
 #define IR_SAMPLE_SIZE 512
@@ -29,29 +30,39 @@ public:
         NRF52Pin &sense_pin;
         //! Value to update with the distance in cm
         float *value;
+        //! Base value (Distance when wood is obstructing on side, next to wheels)
+        float base;
+        //! Scale (to make it more cm like)
+        float scale;
+        //! Exp to apply before scale
+        float exp;
     };
 
     /*! \brief Constructor for IR
         - \p sensors is a vector of pins for *sense* and a pointer to value to update
        with a float distance in (cm) as argument
-        - \p measurement_rate Rate in Hz to do measurements
+        - \p sample_rate Rate in Hz to do samples
      */
-    IR(std::vector<Sensor> sensors, NRF52Pin &emitter_pin, uint16_t measurement_rate = 60);
+    IR(std::vector<Sensor> sensors, NRF52Pin &emitter_pin, uint16_t sample_rate = 4800);
 
-    //! Returns true if the last measurement was done within the interval
-    bool IsMeasuring();
     inline uint16_t GetSamplingRate() { return sample_rate; }
     //! Run a cycle of signal processing with filters
     void RunSignalProcessing();
 
 private:
+    struct SensorData
+    {
+        std::unique_ptr<NRF52ADCChannel> adc_channel;
+        std::unique_ptr<Filters::BandpassFilter> bandpass;
+        std::unique_ptr<Filters::AbsoluteFilter> abs;
+        std::unique_ptr<codal::LowPassFilter> lowpass;
+    };
+
     //! Run a measurement
     void Run();
 
     std::vector<Sensor> sensors;
-    std::vector<std::array<IR_SAMPLE_TYPE, IR_SAMPLE_SIZE>> raw_samples;
-    std::unique_ptr<Timer> timer;
-    CODAL_TIMESTAMP last_measurement;
+    std::vector<SensorData> data;
     uint16_t sample_rate;
     size_t prev_idx{0};
     size_t idx{0};

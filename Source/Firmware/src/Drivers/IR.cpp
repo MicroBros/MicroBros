@@ -1,6 +1,6 @@
 #include <algorithm>
+#include <cmath>
 
-#include "../Filters.h"
 #include "IR.h"
 
 extern MicroBit uBit;
@@ -18,66 +18,48 @@ IR::IR(std::vector<Sensor> sensors, NRF52Pin &emitter_pin, uint16_t sample_rate)
     // Half on, half off
     emitter_pin.setAnalogValue(512);
 
-    // Setup measurement timer
-    // TODO: Replace with NRF52ADC
-    timer = std::make_unique<Timer>([this]() { this->Run(); });
-    timer->EveryUs(1'000'000 / sample_rate);
-}
-
-void IR::Run()
-{
-    if (sensors.empty())
-        return;
-
-    // First cycle so allocate sample buffers
-    if (raw_samples.empty())
+    // Setup ADCs
+    for (auto &sensor : sensors)
     {
-        for (auto &sensor : sensors)
-        {
-            // Initialise raw sample with current analog value
-            std::array<IR_SAMPLE_TYPE, IR_SAMPLE_SIZE> samples{};
-            samples.fill(sensor.sense_pin.getAnalogValue());
-            raw_samples.push_back(samples);
-        }
-    }
+        // Setup the ADC channel for sense pin
+        auto adc{std::unique_ptr<NRF52ADCChannel>(uBit.adc.getChannel(sensor.sense_pin))};
+        adc->requestSampleRate(sample_rate); // Set sample rate
+        adc->setGain(0, 1);                  // Minimize gain to get better range
+        adc->enable();
 
-    // Read IR sensors
-    for (size_t i{0}; i < sensors.size(); ++i)
-    {
-        raw_samples[i][idx] = sensors[i].sense_pin.getAnalogValue();
-    }
+        // Add bandpass filter
+        auto bandpass{std::make_unique<Filters::BandpassFilter>(
+            adc->output, sample_rate / SAMPLES_PER_FLASH, 16.0f, adc->getSampleRate())};
+        bandpass->SetOutputScale(16.0f);
 
-    // Update state
-    prev_idx = idx;
-    idx = (idx + 1) % IR_SAMPLE_SIZE;
-    last_measurement = uBit.timer.getTime();
+        // Add absolute filter
+        auto abs{std::make_unique<Filters::AbsoluteFilter>(bandpass->output)};
+
+        // Add lowpass filter
+        auto lowpass{std::make_unique<codal::LowPassFilter>(abs->output, 0.01f)};
+
+        data.push_back({.adc_channel = std::move(adc),
+                        .bandpass = std::move(bandpass),
+                        .abs = std::move(abs),
+                        .lowpass = std::move(lowpass)});
+    }
 }
 
 void IR::RunSignalProcessing()
 {
-    for (size_t i{0}; i < raw_samples.size(); ++i)
+    for (size_t i{0}; i < data.size(); ++i)
     {
-        // Run bandpass filtering
-        std::array<IR_SAMPLE_TYPE, IR_SAMPLE_SIZE> filtered{};
-        std::array<IR_SAMPLE_TYPE, IR_SAMPLE_SIZE> filtered2{};
+        auto &output{data[i].lowpass};
+        auto buffer{output->pull()};
+        auto format{output->getFormat()};
+        uint8_t *end = buffer.getBytes() + (buffer.length() - (buffer.length() / 2));
+        int value = StreamNormalizer::readSample[format](end);
 
-        const float centre_bandwidth{2.0f};
-        Filters::Bandpass(sample_rate / SAMPLES_PER_FLASH, centre_bandwidth, sample_rate, idx,
-                          raw_samples[i], filtered);
-
-        // Make all values absolute
-        Filters::Abs(filtered);
-
-        // Run bandpass filter
-        Filters::Lowpass(1 / (sample_rate / SAMPLES_PER_FLASH), 1 / sample_rate, idx, filtered,
-                         filtered2);
-
-        // Just set the output value for now
-        // TODO: "Calibration?"
-        *sensors[i].value = filtered2[prev_idx];
+        // Attempt to normalise the distance
+        *sensors[i].value = std::clamp(
+            std::pow(std::max(value - sensors[i].base, 0.1f), sensors[i].exp) * sensors[i].scale,
+            0.0f, 20.0f);
     }
 }
-
-bool IR::IsMeasuring() { return uBit.timer.getTime() - last_measurement < (1000 / sample_rate); }
 
 }; // namespace Firmware::Drivers

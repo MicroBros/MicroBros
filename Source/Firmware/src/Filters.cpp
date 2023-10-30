@@ -4,21 +4,29 @@
 
 #include "Filters.h"
 
+const float PI2 = 2.0f * std::numbers::pi_v<float>;
+
 namespace Firmware::Filters
 {
 
-const float PI2 = 2.0f * std::numbers::pi_v<float>;
-
-void Bandpass(float centre_hz, float bandwidth_hz, int sample_rate, size_t idx,
-              const std::span<float> input, std::span<float> output)
+BandpassFilter::BandpassFilter(DataSource &source, float centre_hz, float bandwidth_hz,
+                               float sample_rate, bool deepCopy)
+    : EffectFilter(source, deepCopy), centre_hz{centre_hz}, bandwidth_hz{bandwidth_hz},
+      sample_rate{sample_rate}, output{*this}
 {
-    if (input.size() != output.size())
-    {
-        LOG_ERROR("Bandpass Input/output size nonmatching, {} != {}", input.size(), output.size());
-        return;
-    }
+}
 
-    size_t n{input.size()};
+BandpassFilter::~BandpassFilter() {}
+
+void BandpassFilter::applyEffect(ManagedBuffer inputBuffer, ManagedBuffer outputBuffer, int format)
+{
+    if (inputBuffer.length() < 1)
+        return;
+
+    int bytes_per_sample{DATASTREAM_FORMAT_BYTES_PER_SAMPLE(format)};
+    int sample_count{inputBuffer.length() / bytes_per_sample};
+    uint8_t *in{inputBuffer.getBytes()};
+    uint8_t *out{outputBuffer.getBytes()};
 
     // Filtering based on Stackoverflow answer https://stackoverflow.com/a/44066316 (CC BY-SA 3.0)
     float x_2{0.0f}; // delayed x, y samples
@@ -42,48 +50,49 @@ void Bandpass(float centre_hz, float bandwidth_hz, int sample_rate, size_t idx,
     const float b1{2 * R * cosf2};
     const float b2{-Rsq};
 
-    for (size_t i{0}; i < n; ++i)
+    for (int i{0}; i < sample_count; i++)
     {
-        // Relative to start of sampling
-        size_t i2{(idx + i) % n};
-
-        // IIR difference equation
-        output[i2] = a0 * input[i2] + a1 * x_1 + a2 * x_2 + b1 * y_1 + b2 * y_2;
+        float in_value{(float)StreamNormalizer::readSample[format](in)};
+        float out_value = a0 * in_value + a1 * x_1 + a2 * x_2 + b1 * y_1 + b2 * y_2;
 
         // shift delayed x, y samples
         x_2 = x_1;
-        x_1 = input[i2];
+        x_1 = in_value;
         y_2 = y_1;
-        y_1 = output[i2];
+        y_1 = out_value;
+
+        StreamNormalizer::writeSample[format](out, (int)(out_value * scale));
+
+        in += bytes_per_sample;
+        out += bytes_per_sample;
     }
 }
 
-void Abs(std::span<float> buffer)
+AbsoluteFilter::AbsoluteFilter(DataSource &source, bool deepCopy)
+    : EffectFilter(source, deepCopy), output{*this}
 {
-    for (size_t i{0}; i < buffer.size(); ++i)
-    {
-        buffer[i] = fabsf(buffer[i]);
-    }
 }
 
-// Simple infinite impulse response filter implemented based on Wikipedia pseudocode
-void Lowpass(float dt, float rc, size_t idx, const std::span<float> input, std::span<float> output)
+AbsoluteFilter::~AbsoluteFilter() {}
+
+void AbsoluteFilter::applyEffect(ManagedBuffer inputBuffer, ManagedBuffer outputBuffer, int format)
 {
-    if (input.size() != output.size())
-    {
-        LOG_ERROR("Lowpass Input/output size nonmatching, {} != {}", input.size(), output.size());
+    if (inputBuffer.length() < 1)
         return;
-    }
 
-    size_t n{input.size()};
-    float a{dt / (rc + dt)};
+    int bytes_per_sample{DATASTREAM_FORMAT_BYTES_PER_SAMPLE(format)};
+    int sample_count{inputBuffer.length() / bytes_per_sample};
+    uint8_t *in{inputBuffer.getBytes()};
+    uint8_t *out{outputBuffer.getBytes()};
 
-    output[idx] = input[idx];
-    for (size_t i{1}; i < n; ++i)
+    for (int i{0}; i < sample_count; i++)
     {
-        size_t out_idx{(idx + i) % n};
-        size_t prev_idx{(idx + i - 1) % n};
-        output[out_idx] = output[prev_idx] + a * (input[out_idx] - output[prev_idx]);
+        // Ensure every sample is absolute
+        StreamNormalizer::writeSample[format](out,
+                                              (int)abs(StreamNormalizer::readSample[format](in)));
+
+        in += bytes_per_sample;
+        out += bytes_per_sample;
     }
 }
 
