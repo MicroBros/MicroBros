@@ -3,6 +3,8 @@ add_executable(Firmware
     src/BLE/MouseService.cpp src/BLE/MouseService.h
     src/Drivers/DFR0548.cpp src/Drivers/DFR0548.h
     src/Drivers/HCSR04.cpp src/Drivers/HCSR04.h
+    src/Drivers/IR.cpp src/Drivers/IR.h
+    src/Filters.cpp src/Filters.h
     src/main.cpp
     src/Mouse2.cpp src/Mouse2.h
     src/PID.cpp src/PID.h
