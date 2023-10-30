@@ -122,8 +122,8 @@ public:
         return tiles[(width * y) + x];
     }
 
-    //! Get the adjacent tile in a direction
-    MazeTile &GetTileAdjacent(int x, int y, Direction direction);
+    //! Get the adjacent tile in a direction at offset
+    MazeTile &GetTileAdjacent(int x, int y, Direction direction, int offset = 1);
 
     //! Check if the coords are within bounds
     inline bool WithinBounds(int x, int y) noexcept

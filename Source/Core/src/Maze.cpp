@@ -93,19 +93,26 @@ bool Maze::HasWall(int x, int y, Direction direction)
     }
 }
 
-MazeTile &Maze::GetTileAdjacent(int x, int y, Direction direction)
+MazeTile &Maze::GetTileAdjacent(int x, int y, Direction direction, int offset)
 {
     int next_x{x};
     int next_y{y};
 
-    if (direction.Value() == Direction::Up)
-        next_y++;
-    else if (direction.Value() == Direction::Right)
-        next_x++;
-    else if (direction.Value() == Direction::Down)
-        next_y--;
-    else if (direction.Value() == Direction::Left)
-        next_x--;
+    switch (direction.Value())
+    {
+    case Direction::Up:
+        next_y += offset;
+        break;
+    case Direction::Right:
+        next_x += offset;
+        break;
+    case Direction::Down:
+        next_y -= offset;
+        break;
+    case Direction::Left:
+        next_x -= offset;
+        break;
+    }
 
     return GetTile(next_x, next_y);
 }

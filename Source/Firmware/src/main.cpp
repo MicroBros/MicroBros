@@ -22,32 +22,41 @@ int main()
     auto mouse{std::make_unique<Firmware::Mouse2>(uBit, dfr0548.get())};
 
     // Setup BLE services
-    auto motor_service{std::make_unique<Firmware::BLE::MotorService>(dfr0548.get())};
-    auto mouse_service{std::make_unique<Firmware::BLE::MouseService>(mouse.get())};
+    // auto motor_service{std::make_unique<Firmware::BLE::MotorService>(dfr0548.get())};
+    // auto mouse_service{std::make_unique<Firmware::BLE::MouseService>(mouse.get())};
 
     LOG_INFO("Initialised MicroMouse!");
 
     // Used for button A toggle
-    bool last_pressed{false};
+    // bool last_pressed{false};
+
     while (1)
     {
-        if (mouse->IsRunning() || mouse->IsMoving())
-        {
-            mouse->Run();
-        }
-
-        // Send update over BLE
-        mouse_service->Update();
-
-        // Simple toggle of running by pressing A
-        if (!last_pressed && uBit.buttonA.isPressed())
-        {
-            mouse->SetRunning(!mouse->IsRunning());
-            last_pressed = true;
-        }
-        else
-            last_pressed = false;
+        mouse->Run();
     }
+
+    /*
+        while (1)
+        {
+            if (mouse->IsRunning() || mouse->IsMoving())
+            {
+                mouse->Run();
+            }
+
+            // Send update over BLE
+            mouse_service->Update();
+
+            // Simple toggle of running by pressing A
+            if (!last_pressed && uBit.buttonA.isPressed())
+            {
+                mouse->SetRunning(!mouse->IsRunning());
+                last_pressed = true;
+            }
+            else
+                last_pressed = false;
+        }
+    */
+
     /*while (1)
     {
         mouse.Run();

@@ -6,8 +6,8 @@ namespace Firmware
 {
 
 Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
-    : uBit{uBit}, driver{driver}, forward_pid("f", -25, 0, 0), right_pid("lr", 50, 0, 0),
-      rot_pid("rot", 0, 0, 250)
+    : uBit{uBit}, driver{driver}, forward_pid("f", -15, 0, 0), right_pid("lr", 25, 0, 0),
+      rot_pid("rot", 0, 0, 1000)
 {
     std::vector<Drivers::HCSR04::Sensor> sensor_pins = {
         {.echo_pin = uBit.io.P0, .trig_pin = uBit.io.P2, .value = &f},
@@ -69,24 +69,26 @@ void Mouse2::SetPWM()
 {
     float denominator{
         std::max(std::abs(forward_pwm) + std::abs(right_pwm) + std::abs(rot_pwm), 1.0f)};
-    fr_pwm = static_cast<int16_t>((forward_pwm - right_pwm - rot_pwm) / denominator * 4095.0f);
-    br_pwm = static_cast<int16_t>((forward_pwm + right_pwm - rot_pwm) / denominator * 4095.0f);
-    fl_pwm = static_cast<int16_t>((forward_pwm + right_pwm + rot_pwm) / denominator * 4095.0f);
-    bl_pwm = static_cast<int16_t>((forward_pwm - right_pwm + rot_pwm) / denominator * 4095.0f);
-    LOG("SetPWM: fr={}\tbr={}\tfl={}\tbl={}\n", fr_pwm, br_pwm, fl_pwm, bl_pwm);
+    fr_pwm = static_cast<int16_t>(((forward_pwm - right_pwm - rot_pwm) / denominator) * 2048.0f);
+    br_pwm = static_cast<int16_t>(((forward_pwm + right_pwm - rot_pwm) / denominator) * 2048.0f);
+    fl_pwm = static_cast<int16_t>(((forward_pwm + right_pwm + rot_pwm) / denominator) * 2048.0f);
+    bl_pwm = static_cast<int16_t>(((forward_pwm - right_pwm + rot_pwm) / denominator) * 2048.0f);
+    LOG("SetPWM(1): forward_pwm={}\tright_pwm={}\trot_pwm={}\tdenominator={}\n", forward_pwm,
+        right_pwm, rot_pwm, denominator);
+    LOG("SetPWM(2): fr={}\tbr={}\tfl={}\tbl={}\n", fr_pwm, br_pwm, fl_pwm, bl_pwm);
 }
 
 void Mouse2::Forward()
 {
     float target = 10.0;
-    forward_pwm = forward_pid.Regulate(target, f, measurement_interval_ms);
-    forward_pid.Debug();
+    // forward_pwm = forward_pid.Regulate(target, f, measurement_interval_ms);
+    // forward_pid.Debug();
 }
 
 // Measures diff between left and right readings, sets right_pwm
 void Mouse2::CenterSides()
 {
-    float diff = l - r;
+    float diff = std::fmod(l, MAZE_SIZE) - std::fmod(r, MAZE_SIZE);
     right_pwm = right_pid.Regulate(0, diff, measurement_interval_ms);
     right_pid.Debug();
 }
@@ -188,6 +190,50 @@ float Mouse2::MovingAverageFilter(float distance)
         return sum / distance_queue.size();
     }
     prev_time_ms = uBit.timer.getTime();
+}
+
+void Mouse2::FindWalls()
+{
+    auto f_index = (int)(f / MAZE_SIZE);
+    auto l_index = (int)(l / MAZE_SIZE);
+    auto r_index = (int)(r / MAZE_SIZE);
+
+    Core::Direction front{Core::Direction::FromRot(rot)};
+    auto left{front.TurnLeft()};
+    auto right{front.TurnRight()};
+
+    GetMaze()->GetTileAdjacent(x, y, front, f_index) |= front.TileSide();
+    GetMaze()->GetTileAdjacent(x, y, left, l_index) |= left.TileSide();
+    GetMaze()->GetTileAdjacent(x, y, right, r_index) |= right.TileSide();
+}
+
+void Mouse2::Position()
+{
+    if (AtPositioningPointB() && IsCenteredLR())
+    {
+    }
+}
+
+bool Mouse2::AtPositioningPointB()
+{
+    float THRESHOLD = 1.0f;
+    auto disty = std::fmod(b + (LENGTH_OF_MOUSE / 2), MAZE_SIZE);
+    if (disty <= THRESHOLD || disty >= MAZE_SIZE - THRESHOLD)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Mouse2::IsCenteredLR()
+{
+    float LR_THRESHOLD = 1.0f;
+    float diff = std::fmod(l, MAZE_SIZE) - std::fmod(r, MAZE_SIZE);
+    if (fabs(diff) <= LR_THRESHOLD)
+    {
+        return true;
+    }
+    return false;
 }
 
 } // namespace Firmware

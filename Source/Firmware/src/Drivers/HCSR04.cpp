@@ -25,6 +25,8 @@ HCSR04::HCSR04(std::vector<Sensor> sensors, uint16_t measurement_interval)
 
 void HCSR04::Run()
 {
+    if (sensors.empty())
+        return;
     // Get ready for the next sensor
     idx = (idx + 1) % sensors.size();
     // Set high (trig)

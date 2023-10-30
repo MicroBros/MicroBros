@@ -64,8 +64,10 @@ private:
 
     //! Distance measurements to front, left and right obstructions
     float f{0.0f};
+    float b{0.0f};
     float l{0.0f};
     float r{0.0f};
+    const float LENGTH_OF_MOUSE = 16;
 
     int iter = 0;
 
@@ -74,10 +76,10 @@ private:
     float forward_pwm = 0.0f;
     float right_pwm = 0.0f;
     float rot_pwm = 0.0f;
-    uint16_t fl_pwm;
-    uint16_t fr_pwm;
-    uint16_t bl_pwm;
-    uint16_t br_pwm;
+    int16_t fl_pwm;
+    int16_t fr_pwm;
+    int16_t bl_pwm;
+    int16_t br_pwm;
 
     PID rot_pid;
     PID right_pid;
@@ -93,6 +95,15 @@ private:
     void FindMinima();
 
     float MovingAverageFilter(float distance);
+
+    void FindWalls();
+    void Position();
+
+    //! Returns true if mouse is at a position point
+    bool AtPositioningPointB();
+
+    //! Returns true if mouse is at left-right center
+    bool IsCenteredLR();
 };
 
 } // namespace Firmware
