@@ -11,7 +11,7 @@ float PID::Regulate(float target, float current, uint16_t measurement_interval_m
 {
     this->measurement_interval_ms = measurement_interval_ms;
     float error = target - current;
-    float delta_error = error - previous_error;
+    float delta_error = previous_error - error;
 
     P = Kp * error;
     I += (Ki * error) * measurement_interval_ms;

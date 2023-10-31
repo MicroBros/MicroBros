@@ -9,6 +9,7 @@
 
 #include "Drivers/DFR0548.h"
 #include "Drivers/HCSR04.h"
+#include "Drivers/IR.h"
 #include "PID.h"
 #include "Utils.h"
 
@@ -45,6 +46,7 @@ private:
     MicroBit &uBit;
     Drivers::DFR0548 *driver;
     std::unique_ptr<Drivers::HCSR04> ultrasonics;
+    std::unique_ptr<Drivers::IR> IRs;
     int sensor_count;
     uint64_t prev_time_ms; // Value of last time reading
 
