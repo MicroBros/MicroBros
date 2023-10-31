@@ -42,6 +42,10 @@ public:
         Right = 1,
         Down = 2,
         Left = 3,
+
+        // Aliases
+        Forward = Up,
+        Back = Down,
     };
 
     Direction(ValueEnum direction) : direction{direction} {}
@@ -82,6 +86,9 @@ public:
 
     //! Get the string value of the Direction
     std::string_view ToString();
+
+    // Generate comparison functions
+    auto operator<=>(const Direction &) const = default;
 
 private:
     static const ValueType Values = static_cast<ValueType>(ValueEnum::Left) + 1;

@@ -19,6 +19,14 @@ namespace Firmware
 class Mouse2 : public Core::Mouse
 {
 public:
+    enum class State
+    {
+        Uninitialized,
+        MoveStraight,
+        MoveTurn,
+        Stopped,
+    };
+
     Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver);
     //! Run regulation for movement, ran until movement is done
     void Run();
@@ -31,6 +39,9 @@ public:
 
     //! Reset the Mouse satte
     void Reset();
+
+    //! \brief Get the distance in local \p direction (up=forward, down=backward)
+    float GetDistance(Core::Direction direction);
 
     //! Get if the mouse is running (auto-execute steps)
     inline bool IsRunning() noexcept { return running; }
@@ -49,6 +60,10 @@ private:
     std::unique_ptr<Drivers::IR> IRs;
     int sensor_count;
     uint64_t prev_time_ms; // Value of last time reading
+    State state{State::Uninitialized};
+    Core::Direction move_direction{Core::Direction::Forward}; // Move direction (local)
+
+    bool reverse_forward;
 
     // Filtering-related variables
     std::deque<float> distance_queue; // Saving latest distance readings for filtering reasons
@@ -86,6 +101,14 @@ private:
     PID rot_pid;
     PID right_pid;
     PID forward_pid;
+
+    void Initialize();
+    void MoveStraight();
+    void MoveTurn();
+    //! Read the walls and step algorithm
+    void StepAlgorithm();
+    //! Get global forward that is compensated for reverse forward
+    Core::Direction GetGlobalForward();
 
     void PerpFront();
     void CenterSides();

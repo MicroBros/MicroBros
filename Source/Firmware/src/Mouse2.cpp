@@ -29,15 +29,47 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
 
 void Mouse2::Run()
 {
-    static auto start_time = 0;
+    IRs->RunSignalProcessing();
 
+    // FSM for movement states
+    switch (state)
+    {
+    case State::Uninitialized:
+        Initialize();
+        break;
+    case State::MoveStraight:
+        MoveStraight();
+        break;
+    case State::MoveTurn:
+        MoveTurn();
+        break;
+    case State::Stopped:
+        driver->StopMotors();
+        break;
+    }
+}
+
+void Mouse2::Initialize()
+{
+    // Ensure all the ultrasonic sensors has been initialized
+    fiber_sleep(sensor_count * measurement_interval_ms);
+
+    // Assume that if back distance is longer than front that the robot was placed with reverse
+    // front
+    reverse_forward = b > f;
+
+    StepAlgorithm();
+}
+
+void Mouse2::MoveStraight()
+{
     // Debug
     // LOG("Iter:{}", iter);
     // LOG("Distances: f={}\t l={}\t, r={}\n", f, l, r);
     // LOG("DT={}\n", measurement_interval_ms);
 
     // Sense
-    IRs->RunSignalProcessing();
+    // TODO: Detect when a tile has been barely entered and do StepAlgorithm
 
     // Think
     Forward();
@@ -54,6 +86,93 @@ void Mouse2::Run()
 
     // LOG_INFO("RUN TIME={}", uBit.timer.getTime() - start_time);
     // start_time = uBit.timer.getTime();
+}
+
+void Mouse2::MoveTurn()
+{
+    // TODO: Implement turning, use move_direction (which is local)
+
+    LOG_INFO("TODO: Turning");
+    driver->StopMotors();
+}
+
+void Mouse2::StepAlgorithm()
+{
+    // Get distances to sides
+    float front{GetDistance(Core::Direction::Forward)};
+    float left{GetDistance(Core::Direction::Left)};
+    float right{GetDistance(Core::Direction::Right)};
+
+    // Get the global direction for local forward and global sides
+    auto global_forward{GetGlobalForward()};
+    auto global_left{global_forward.TurnLeft()};
+    auto global_right{global_forward.TurnRight()};
+    auto global_backward{global_forward.TurnRight(2)};
+
+    // Sense walls
+    if (front < 20.0f)
+        GetMaze()->GetTile(x, y) |= global_forward.TileSide();
+    if (left < 5.0f)
+        GetMaze()->GetTile(x, y) |= global_left.TileSide();
+    if (right < 5.0f)
+        GetMaze()->GetTile(x, y) |= global_right.TileSide();
+
+    // Get the move directions
+    auto move_direction_opt{GetAlgorithm()->Step(this, x, y, global_forward)};
+    // Stop if no direction given by algorithm
+    if (!move_direction_opt.has_value())
+    {
+        state = State::Stopped;
+        return;
+    }
+
+    auto move_direction{move_direction_opt.value()};
+
+    // Forward
+    if (move_direction == global_forward)
+    {
+        state = State::MoveStraight;
+        move_direction = Core::Direction::Forward;
+    }
+    // Backwards (reverse forward)
+    else if (move_direction == global_backward)
+    {
+        reverse_forward = !reverse_forward;
+        state = State::MoveStraight;
+        move_direction = Core::Direction::Forward;
+    }
+    // Turn left
+    else if (move_direction == global_left)
+    {
+        state = State::MoveTurn;
+        move_direction = Core::Direction::Left;
+    }
+    // Turn right
+    else if (move_direction == global_right)
+    {
+        state = State::MoveTurn;
+        move_direction = Core::Direction::Right;
+    }
+}
+
+float Mouse2::GetDistance(Core::Direction direction)
+{
+    switch (direction.Value())
+    {
+    case Core::Direction::Forward:
+        return reverse_forward ? b : f;
+    case Core::Direction::Back:
+        return reverse_forward ? f : b;
+    case Core::Direction::Left:
+        return reverse_forward ? r : l;
+    case Core::Direction::Right:
+        return reverse_forward ? l : r;
+    };
+}
+
+Core::Direction Mouse2::GetGlobalForward()
+{
+    return Core::Direction::FromRot(reverse_forward ? (rot + 180.0f) : rot);
 }
 
 void Mouse2::Step()
@@ -73,6 +192,9 @@ void Mouse2::Reset()
         if (!SetAlgorithm(algorithm))
             LOG_ERROR("Error setting algorithm: {}", algorithm);
     }
+
+    // Reset state
+    state = State::Uninitialized;
 }
 
 void Mouse2::SetPWM()
