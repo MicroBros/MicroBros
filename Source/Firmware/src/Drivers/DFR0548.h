@@ -27,7 +27,8 @@ namespace Firmware::Drivers
 class DFR0548
 {
 public:
-    DFR0548(MicroBit &uBit, MicroBitI2C &i2c, uint16_t pca9685_address = 0x40 << 1);
+    DFR0548(MicroBit &uBit, MicroBitI2C &i2c, bool smooth_output = true,
+            uint16_t pca9685_address = 0x40 << 1);
 
     //! The various motor outputs of the DFR0548 expansion board
     enum class MotorOutput : uint8_t
@@ -114,6 +115,7 @@ private:
     uint16_t component_id;
     MotorValues current_motors;
     MotorValues set_motors;
+    bool smooth_output;
     std::unique_ptr<Firmware::Timer> timer;
 
     constexpr static std::array<PCA9685Reg, 4> PCA9685_LED_BASE = {
