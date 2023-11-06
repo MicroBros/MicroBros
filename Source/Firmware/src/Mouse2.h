@@ -63,18 +63,12 @@ private:
     State state{State::Uninitialized};
     Core::Direction move_direction{Core::Direction::Forward}; // Move direction (local)
     CODAL_TIMESTAMP next_expected_tiley_ms;
+    CODAL_TIMESTAMP next_algorithm_step_ms{std::numeric_limits<CODAL_TIMESTAMP>::max()};
 
     bool reverse_forward;
 
     // Filtering-related variables
     Filters::MovingAverageFilter<float, 3> sum_sides_avg;
-    std::deque<float> distance_queue; // Saving latest distance readings for filtering reasons
-    static const int FILTER_SIZE = 3; // Number of readings for moving average
-    static constexpr float THRESHOLD = 0.05f; // Change in distance threshold
-    static const int DEBOUNCE_COUNT = 3;      // Number of continous increases before stopping
-    float prevAverageDistance = 0;
-    int increasingCount = 0;
-    const float MAZE_SIZE = 16.0f;
 
     //! True if the Mouse2 is running autonomously, set false for manual control
     bool running{false};
@@ -95,10 +89,6 @@ private:
     float forward_pwm = 0.0f;
     float right_pwm = 0.0f;
     float rot_pwm = 0.0f;
-    int16_t fl_pwm;
-    int16_t fr_pwm;
-    int16_t bl_pwm;
-    int16_t br_pwm;
 
     PID right_pid;
 
@@ -107,25 +97,12 @@ private:
     void MoveTurn();
     //! Read the walls and step algorithm
     void StepAlgorithm();
+    //! Called with global direction of a move
+    void MovedTile(Core::Direction moved_tile);
     //! Get global forward that is compensated for reverse forward
     Core::Direction GetGlobalForward();
 
-    void SetPWM();
-
-    void Turn(char direction);
-    void FindMaxima();
-    void FindMinima();
-
-    float MovingAverageFilter(float distance);
-
-    void FindWalls();
-    void Position();
-
-    //! Returns true if mouse is at a position point
-    bool AtPositioningPointB();
-
-    //! Returns true if mouse is at left-right center
-    bool IsCenteredLR();
+    void SetMotors(float forward, float right, float rot);
 };
 
 } // namespace Firmware

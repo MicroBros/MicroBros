@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <Core/Log.h>
 
 #include "Mouse2.h"
@@ -45,6 +47,15 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     if (state == State::MoveStraight && forward < 4.5f)
     {
         state = State::Stopped;
+    }
+
+    // Step the algorithm if requested
+    if (next_algorithm_step_ms > now)
+    {
+        // Step the algorithm with current sensor data
+        StepAlgorithm();
+        // Avoid stepping again until another tile change
+        next_algorithm_step_ms = std::numeric_limits<CODAL_TIMESTAMP>::max();
     }
 
     // FSM for movement states
@@ -103,29 +114,25 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     {
         ++itty;
         LOG_DEBUG("Tileyy={}", itty);
-        next_expected_tiley_ms = now + 500;
+        // Register the tile move
+        MovedTile(GetDirection());
+        LOG_DEBUG("Moved to tile x:{}, y:{}", static_cast<int>(x), static_cast<int>(y));
+
+        next_algorithm_step_ms =
+            now + 200; // step the algorithm after 200 ms so we have passed the notch
+        next_expected_tiley_ms = now + 500; // do not expect a tile change the next 500 ms
         fiber_sleep(5);
     }
     last_summ = summ;
 
     forward_pwm = 1;
-    // PID Rotation
-    // rot_pwm = rot_pid.Regulate(l, r, dt);
-    // rot_pid.Debug();
-    //  PID Right
     right_pwm = right_pid.Regulate(0, diff, dt);
+    // Set rotation too so we end up straight
     rot_pwm = right_pwm * 0.75;
-    // right_pid.Debug();
 
     // Act
-    SetPWM();
-    driver->SetMotors(bl_pwm, fl_pwm, br_pwm, fr_pwm);
-    // LOG_INFO("front(US)={:.1f}cm, back(US)={:.1f}cm, left(IR)={:.1f}cm, right(IR)={:.1f}cm", f,
-    // b, l, r);
+    SetMotors(forward_pwm, right_pwm, rot_pwm);
     ++iter;
-
-    // LOG_INFO("RUN TIME={}", uBit.timer.getTime() - start_time);
-    // start_time = uBit.timer.getTime();
 }
 
 void Mouse2::MoveTurn()
@@ -237,156 +244,37 @@ void Mouse2::Reset()
     state = State::Uninitialized;
 }
 
-void Mouse2::SetPWM()
+void Mouse2::SetMotors(float forward, float right, float rot)
 {
-    float denominator{
-        std::max(std::abs(forward_pwm) + std::abs(right_pwm) + std::abs(rot_pwm), 1.0f)};
-    fr_pwm = static_cast<int16_t>(((forward_pwm - right_pwm - rot_pwm) / denominator) * 4095.0f);
-    br_pwm = static_cast<int16_t>(((forward_pwm + right_pwm - rot_pwm) / denominator) * 4095.0f);
-    fl_pwm = static_cast<int16_t>(((forward_pwm + right_pwm + rot_pwm) / denominator) * 4095.0f);
-    bl_pwm = static_cast<int16_t>(((forward_pwm - right_pwm + rot_pwm) / denominator) * 4095.0f);
-    // LOG("SetPWM(1): forward_pwm={}\tright_pwm={}\trot_pwm={}\tdenominator={}\n", forward_pwm,
-    // right_pwm, rot_pwm, denominator);
-    // LOG("SetPWM(2): fr={}\tbr={}\tfl={}\tbl={}\n", fr_pwm, br_pwm, fl_pwm, bl_pwm);
+    float denominator{std::max(std::abs(forward) + std::abs(right) + std::abs(rot), 1.0f)};
+
+    driver->SetMotors(
+        static_cast<int16_t>(((forward_pwm - right_pwm + rot_pwm) / denominator) * 4095.0f),
+        static_cast<int16_t>(((forward_pwm + right_pwm + rot_pwm) / denominator) * 4095.0f),
+        static_cast<int16_t>(((forward_pwm + right_pwm - rot_pwm) / denominator) * 4095.0f),
+        static_cast<int16_t>(((forward_pwm - right_pwm - rot_pwm) / denominator) * 4095.0f));
 }
 
-void Mouse2::Turn(char direction)
+void Mouse2::MovedTile(Core::Direction direction)
 {
-    if (direction == 'r')
+    switch (direction.Value())
     {
-        fr_pwm = -2048;
-        br_pwm = -2048;
-        fl_pwm = 2048;
-        bl_pwm = 2048;
+    case Core::Direction::Up:
+        y++;
+        break;
+    case Core::Direction::Right:
+        x++;
+        break;
+    case Core::Direction::Down:
+        y--;
+        break;
+    case Core::Direction::Left:
+        x--;
+        break;
     }
-    else
-    {
-        fr_pwm = 2048;
-        br_pwm = 2048;
-        fl_pwm = -2048;
-        bl_pwm = -2048;
-    }
-
-    SetPWM();
-    driver->SetMotors(bl_pwm, fl_pwm, br_pwm, fr_pwm);
-    FindMaxima();
-    FindMinima();
-}
-
-void Mouse2::FindMaxima()
-{
-
-    prevAverageDistance = f;
-    while (true)
-    {
-        float avg_distance = MovingAverageFilter(f);
-        if (avg_distance < prevAverageDistance + THRESHOLD)
-        {
-            ++increasingCount;
-            if (increasingCount + DEBOUNCE_COUNT)
-            {
-                break;
-            }
-        }
-        else
-        {
-            increasingCount = 0;
-        }
-        prevAverageDistance = 0;
-    }
-}
-
-void Mouse2::FindMinima()
-{
-
-    prevAverageDistance = f;
-
-    // End phase that breaks when shortest distance (perp angle) is found
-    while (true)
-    {
-        float avg_distance = MovingAverageFilter(f);
-        if (avg_distance > prevAverageDistance + THRESHOLD)
-        {
-            ++increasingCount;
-            if (increasingCount + DEBOUNCE_COUNT)
-            {
-                break;
-            }
-        }
-        else
-        {
-            increasingCount = 0;
-        }
-        prevAverageDistance = 0;
-    }
-}
-
-float Mouse2::MovingAverageFilter(float distance)
-{
-    // Time check to ensure a new distance value is registered before proceeding
-    // if (uBit.timer.getTime() - prev_time_ms >= measurement_interval_ms * sensor_count)
-    // {
-    if (distance_queue.size() == FILTER_SIZE)
-    {
-        distance_queue.pop_front();
-    }
-    distance_queue.push_back(distance);
-
-    float sum = 0.0;
-    for (float d : distance_queue)
-    {
-        sum += d;
-    }
-    return sum / distance_queue.size();
-    //}
-    // prev_time_ms = uBit.timer.getTime();
-}
-
-void Mouse2::FindWalls()
-{
-    auto f_index = (int)(f / MAZE_SIZE);
-    auto l_index = (int)(l / MAZE_SIZE);
-    auto r_index = (int)(r / MAZE_SIZE);
-
-    Core::Direction front{Core::Direction::FromRot(rot)};
-    auto left{front.TurnLeft()};
-    auto right{front.TurnRight()};
-
-    GetMaze()->GetTileAdjacent(x, y, front, f_index) |= front.TileSide();
-    GetMaze()->GetTileAdjacent(x, y, left, l_index) |= left.TileSide();
-    GetMaze()->GetTileAdjacent(x, y, right, r_index) |= right.TileSide();
-}
-
-void Mouse2::Position()
-{
-    // Should determine the relative position of mouse and add to the absolute position
-    // Must be called before a new turn
-    if (AtPositioningPointB() && IsCenteredLR())
-    {
-        return;
-    }
-}
-
-bool Mouse2::AtPositioningPointB()
-{
-    float THRESHOLD = 1.0f;
-    auto disty = std::fmod(b + (LENGTH_OF_MOUSE / 2), MAZE_SIZE);
-    if (disty <= THRESHOLD || disty >= MAZE_SIZE - THRESHOLD)
-    {
-        return true;
-    }
-    return false;
-}
-
-bool Mouse2::IsCenteredLR()
-{
-    float LR_THRESHOLD = 1.0f;
-    float diff = std::fmod(l, MAZE_SIZE) - std::fmod(r, MAZE_SIZE);
-    if (fabs(diff) <= LR_THRESHOLD)
-    {
-        return true;
-    }
-    return false;
+    // Clamp em for now
+    x = std::clamp(x, 0.0f, 15.0f);
+    y = std::clamp(y, 0.0f, 15.0f);
 }
 
 } // namespace Firmware
