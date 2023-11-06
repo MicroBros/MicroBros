@@ -6,8 +6,8 @@ namespace Firmware
 {
 
 Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
-    : uBit{uBit}, driver{driver}, forward_pid("f", -15, 0, 0), right_pid("lr", 0.75, 0, 20),
-      rot_pid("rot", 0, 0, 20)
+    : uBit{uBit}, driver{driver}, right_pid("lr", 0.85, 0, 10)
+
 {
     std::vector<Drivers::HCSR04::Sensor> sensor_pins = {
         {.echo_pin = uBit.io.P13, .trig_pin = uBit.io.P14, .value = &f},
@@ -25,20 +25,36 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
 
     // Initialise FloodFill as default algorithm
     SetAlgorithm("FloodFill");
+
+    // Make Jonathan happy and let the IR run a few cycles c:
+    for (size_t i{0}; i < 8; ++i)
+    {
+        IRs->RunSignalProcessing();
+        fiber_sleep(10);
+    }
 }
 
-void Mouse2::Run()
+void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 {
     IRs->RunSignalProcessing();
+
+    // LOG_INFO("Left: {}cm, Right: {}cm", l, r);
+
+    // Stop at end
+    float forward{GetDistance(Core::Direction::Forward)};
+    if (state == State::MoveStraight && forward < 4.5f)
+    {
+        state = State::Stopped;
+    }
 
     // FSM for movement states
     switch (state)
     {
     case State::Uninitialized:
-        Initialize();
+        Initialize(now);
         break;
     case State::MoveStraight:
-        MoveStraight();
+        MoveStraight(now, 60);
         break;
     case State::MoveTurn:
         MoveTurn();
@@ -47,9 +63,11 @@ void Mouse2::Run()
         driver->StopMotors();
         break;
     }
+
+    // fiber_sleep(10);
 }
 
-void Mouse2::Initialize()
+void Mouse2::Initialize(CODAL_TIMESTAMP now)
 {
     // Ensure all the ultrasonic sensors has been initialized
     fiber_sleep(sensor_count * measurement_interval_ms);
@@ -59,29 +77,51 @@ void Mouse2::Initialize()
     reverse_forward = b > f;
 
     StepAlgorithm();
+
+    next_expected_tiley_ms = now + 250; // Assume next tiley is at least 100ms later after start
 }
 
-void Mouse2::MoveStraight()
+void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 {
-    // Debug
-    // LOG("Iter:{}", iter);
-    // LOG("Distances: f={}\t l={}\t, r={}\n", f, l, r);
-    // LOG("DT={}\n", measurement_interval_ms);
-
-    // Sense
     // TODO: Detect when a tile has been barely entered and do StepAlgorithm
+    float left{GetDistance(Core::Direction::Left)};
+    float right{GetDistance(Core::Direction::Right)};
 
-    // Think
-    Forward();
-    PerpFront();
-    CenterSides();
+    // Correct left and right in case there is no wall present
+    if (left > 5.5f)
+        left = 16.0f - 7.8f - right;
+    if (right > 5.5f)
+        right = 16.0f - 7.8f - left;
+
+    float diff{left - right};
+
+    // Detect tile changes by seeing a difference in IR values
+    auto summ{sum_sides_avg.AddValueAndSum(left + right)};
+    static auto last_summ{summ};
+    static int itty{0};
+    if (summ > (last_summ + 0.150f) && (now > next_expected_tiley_ms))
+    {
+        ++itty;
+        LOG_DEBUG("Tileyy={}", itty);
+        next_expected_tiley_ms = now + 500;
+        fiber_sleep(5);
+    }
+    last_summ = summ;
+
+    forward_pwm = 1;
+    // PID Rotation
+    // rot_pwm = rot_pid.Regulate(l, r, dt);
+    // rot_pid.Debug();
+    //  PID Right
+    right_pwm = right_pid.Regulate(0, diff, dt);
+    rot_pwm = right_pwm * 0.75;
+    // right_pid.Debug();
 
     // Act
     SetPWM();
     driver->SetMotors(bl_pwm, fl_pwm, br_pwm, fr_pwm);
     // LOG_INFO("front(US)={:.1f}cm, back(US)={:.1f}cm, left(IR)={:.1f}cm, right(IR)={:.1f}cm", f,
     // b, l, r);
-    //
     ++iter;
 
     // LOG_INFO("RUN TIME={}", uBit.timer.getTime() - start_time);
@@ -210,29 +250,6 @@ void Mouse2::SetPWM()
     // LOG("SetPWM(2): fr={}\tbr={}\tfl={}\tbl={}\n", fr_pwm, br_pwm, fl_pwm, bl_pwm);
 }
 
-void Mouse2::Forward()
-{
-    float target = 10.0;
-    forward_pwm = 1;
-    // forward_pwm = forward_pid.Regulate(target, f, measurement_interval_ms);
-    // forward_pid.Debug();
-}
-
-// Measures diff between left and right readings, sets right_pwm
-void Mouse2::CenterSides()
-{
-    float diff = std::fmod(l - r, MAZE_SIZE);
-    right_pwm = right_pid.Regulate(0, diff, measurement_interval_ms);
-    right_pid.Debug();
-}
-
-void Mouse2::PerpFront()
-{
-    float diff = std::fmod(l - r, MAZE_SIZE);
-    rot_pwm = rot_pid.Regulate(l, r, measurement_interval_ms);
-    rot_pid.Debug();
-}
-
 void Mouse2::Turn(char direction)
 {
     if (direction == 'r')
@@ -307,22 +324,22 @@ void Mouse2::FindMinima()
 float Mouse2::MovingAverageFilter(float distance)
 {
     // Time check to ensure a new distance value is registered before proceeding
-    if (uBit.timer.getTime() - prev_time_ms >= measurement_interval_ms * sensor_count)
+    // if (uBit.timer.getTime() - prev_time_ms >= measurement_interval_ms * sensor_count)
+    // {
+    if (distance_queue.size() == FILTER_SIZE)
     {
-        if (distance_queue.size() == FILTER_SIZE)
-        {
-            distance_queue.pop_front();
-        }
-        distance_queue.push_back(distance);
-
-        float sum = 0.0;
-        for (float d : distance_queue)
-        {
-            sum += d;
-        }
-        return sum / distance_queue.size();
+        distance_queue.pop_front();
     }
-    prev_time_ms = uBit.timer.getTime();
+    distance_queue.push_back(distance);
+
+    float sum = 0.0;
+    for (float d : distance_queue)
+    {
+        sum += d;
+    }
+    return sum / distance_queue.size();
+    //}
+    // prev_time_ms = uBit.timer.getTime();
 }
 
 void Mouse2::FindWalls()

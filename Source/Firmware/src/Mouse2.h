@@ -29,7 +29,7 @@ public:
 
     Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver);
     //! Run regulation for movement, ran until movement is done
-    void Run();
+    void Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt);
 
     //! \brief Start a single step
     //!
@@ -62,10 +62,12 @@ private:
     uint64_t prev_time_ms; // Value of last time reading
     State state{State::Uninitialized};
     Core::Direction move_direction{Core::Direction::Forward}; // Move direction (local)
+    CODAL_TIMESTAMP next_expected_tiley_ms;
 
     bool reverse_forward;
 
     // Filtering-related variables
+    Filters::MovingAverageFilter<float, 3> sum_sides_avg;
     std::deque<float> distance_queue; // Saving latest distance readings for filtering reasons
     static const int FILTER_SIZE = 3; // Number of readings for moving average
     static constexpr float THRESHOLD = 0.05f; // Change in distance threshold
@@ -98,21 +100,16 @@ private:
     int16_t bl_pwm;
     int16_t br_pwm;
 
-    PID rot_pid;
     PID right_pid;
-    PID forward_pid;
 
-    void Initialize();
-    void MoveStraight();
+    void Initialize(CODAL_TIMESTAMP now);
+    void MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt);
     void MoveTurn();
     //! Read the walls and step algorithm
     void StepAlgorithm();
     //! Get global forward that is compensated for reverse forward
     Core::Direction GetGlobalForward();
 
-    void PerpFront();
-    void CenterSides();
-    void Forward();
     void SetPWM();
 
     void Turn(char direction);

@@ -33,11 +33,18 @@ int main()
     // Used for button A toggle
     // bool last_pressed{false};
 
+    CODAL_TIMESTAMP start{uBit.timer.getTime()};
     while (1)
     {
+        CODAL_TIMESTAMP now{uBit.timer.getTime()};
 
-        // fiber_sleep(100);
-        mouse->Run();
+        // Run mouse
+        mouse->Run(now, now - start);
+
+        start = now;
+
+        // Give at least 1ms
+        fiber_sleep(1);
     }
 
     /*

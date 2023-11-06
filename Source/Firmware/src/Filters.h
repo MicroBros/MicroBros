@@ -1,6 +1,7 @@
 #pragma once
 
 #include <MicroBit.h>
+#include <deque>
 #include <span>
 
 namespace Firmware::Filters
@@ -42,6 +43,38 @@ public:
 
     //! Output DataStream
     DataStream output;
+};
+
+template <typename T, size_t SIZE> class MovingAverageFilter
+{
+public:
+    MovingAverageFilter() {}
+
+    inline void AddValue(T value)
+    {
+        while (queue.size() >= SIZE)
+            queue.pop_front();
+
+        queue.push_back(value);
+    }
+
+    inline T Sum()
+    {
+        T sum = 0.0;
+        for (T d : queue)
+            sum += d;
+
+        return sum / queue.size();
+    }
+
+    inline T AddValueAndSum(T value)
+    {
+        AddValue(value);
+        return Sum();
+    }
+
+private:
+    std::deque<T> queue;
 };
 
 }; // namespace Firmware::Filters
