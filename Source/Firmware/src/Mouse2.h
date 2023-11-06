@@ -66,6 +66,8 @@ private:
     CODAL_TIMESTAMP next_algorithm_step_ms{std::numeric_limits<CODAL_TIMESTAMP>::max()};
 
     bool reverse_forward;
+    int heading;
+    int heading_diff; // Heading difference to forward
 
     // Filtering-related variables
     Filters::MovingAverageFilter<float, 3> sum_sides_avg;
@@ -94,7 +96,7 @@ private:
 
     void Initialize(CODAL_TIMESTAMP now);
     void MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt);
-    void MoveTurn();
+    void MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt);
     //! Read the walls and step algorithm
     void StepAlgorithm();
     //! Called with global direction of a move
@@ -103,6 +105,8 @@ private:
     Core::Direction GetGlobalForward();
 
     void SetMotors(float forward, float right, float rot);
+    //! Calibrate the forward heading
+    void CalibrateForward();
 };
 
 } // namespace Firmware

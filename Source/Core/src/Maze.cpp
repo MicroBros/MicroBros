@@ -12,6 +12,23 @@ Direction Direction::FromRot(float rot)
                                                        Direction::Values));
 }
 
+int Direction::Degrees()
+{
+    switch (direction)
+    {
+    case Core::Direction::Up:
+        return 0;
+    case Core::Direction::Right:
+        return 90;
+    case Core::Direction::Down:
+        return 180;
+    case Core::Direction::Left:
+        return 270;
+    default:
+        return 0;
+    }
+}
+
 std::string_view Direction::ToString()
 {
     switch (direction)

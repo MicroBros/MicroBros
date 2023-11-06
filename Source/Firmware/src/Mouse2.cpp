@@ -8,7 +8,7 @@ namespace Firmware
 {
 
 Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
-    : uBit{uBit}, driver{driver}, right_pid("lr", 0.85, 0, 10)
+    : uBit{uBit}, driver{driver}, right_pid("r", 0.85, 0, 10)
 
 {
     std::vector<Drivers::HCSR04::Sensor> sensor_pins = {
@@ -25,8 +25,8 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
     IRs = std::make_unique<Drivers::IR>(IR_pins, uBit.io.P0);
     measurement_interval_ms = ultrasonics->GetMeasurementInterval();
 
-    // Initialise FloodFill as default algorithm
-    SetAlgorithm("FloodFill");
+    // Initialise WallFollower as default algorithm
+    SetAlgorithm("WallFollower");
 
     // Make Jonathan happy and let the IR run a few cycles c:
     for (size_t i{0}; i < 8; ++i)
@@ -39,6 +39,7 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
 void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 {
     IRs->RunSignalProcessing();
+    heading = uBit.compass.heading();
 
     // LOG_INFO("Left: {}cm, Right: {}cm", l, r);
 
@@ -50,7 +51,7 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     }
 
     // Step the algorithm if requested
-    if (next_algorithm_step_ms > now)
+    if (now > next_algorithm_step_ms)
     {
         // Step the algorithm with current sensor data
         StepAlgorithm();
@@ -68,7 +69,7 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
         MoveStraight(now, 60);
         break;
     case State::MoveTurn:
-        MoveTurn();
+        MoveTurn(now, 60);
         break;
     case State::Stopped:
         driver->StopMotors();
@@ -118,6 +119,8 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
         MovedTile(GetDirection());
         LOG_DEBUG("Moved to tile x:{}, y:{}", static_cast<int>(x), static_cast<int>(y));
 
+        CalibrateForward();
+
         next_algorithm_step_ms =
             now + 200; // step the algorithm after 200 ms so we have passed the notch
         next_expected_tiley_ms = now + 500; // do not expect a tile change the next 500 ms
@@ -135,9 +138,43 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     ++iter;
 }
 
-void Mouse2::MoveTurn()
+void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 {
+    // Get the current heading in degrees
+    int current_heading{NormaliseDeg(heading - heading_diff)};
+    int wanted_heading_diff{NormaliseDeg(GetGlobalForward().Degrees() - current_heading)};
+    LOG_DEBUG("wanted_heading_diff:{}, current_heading:{}", wanted_heading_diff, current_heading);
+    fiber_sleep(10);
+
+    if (wanted_heading_diff < 5 && wanted_heading_diff > -5)
+    {
+        // TODO: Do algorithm step
+        state = State::MoveStraight;
+    }
+
     // TODO: Implement turning, use move_direction (which is local)
+    float left{GetDistance(Core::Direction::Left)};
+    float right{GetDistance(Core::Direction::Right)};
+
+    // Correct left and right in case there is no wall present
+    /*
+    if (move_direction == Core::Direction::Right)
+        left = 16.0f - 7.8f - right;
+    else
+        right = 16.0f - 7.8f - left;
+
+    float diff{left - right};
+    */
+    if (move_direction == Core::Direction::Right)
+    {
+        float move_right{right_pid.Regulate(4.5, right, dt)};
+        SetMotors(0.08f, move_right + 0.2f, 1);
+    }
+    else if (move_direction == Core::Direction::Left)
+    {
+        float move_left{right_pid.Regulate(4.5, left, dt)};
+        SetMotors(0.08f, -move_left - 0.2f, -1);
+    }
 
     LOG_INFO("TODO: Turning");
     driver->StopMotors();
@@ -173,33 +210,39 @@ void Mouse2::StepAlgorithm()
         return;
     }
 
-    auto move_direction{move_direction_opt.value()};
+    auto dir{move_direction_opt.value()};
 
     // Forward
-    if (move_direction == global_forward)
+    if (dir == global_forward)
     {
         state = State::MoveStraight;
         move_direction = Core::Direction::Forward;
+        LOG_DEBUG("Move forward");
     }
     // Backwards (reverse forward)
-    else if (move_direction == global_backward)
+    else if (dir == global_backward)
     {
         reverse_forward = !reverse_forward;
         state = State::MoveStraight;
         move_direction = Core::Direction::Forward;
+        LOG_DEBUG("Move forward & reverse");
     }
     // Turn left
-    else if (move_direction == global_left)
+    else if (dir == global_left)
     {
         state = State::MoveTurn;
         move_direction = Core::Direction::Left;
+        LOG_DEBUG("Turn left");
     }
     // Turn right
-    else if (move_direction == global_right)
+    else if (dir == global_right)
     {
         state = State::MoveTurn;
         move_direction = Core::Direction::Right;
+        LOG_DEBUG("Turn right");
     }
+
+    rot += move_direction.Degrees();
 }
 
 float Mouse2::GetDistance(Core::Direction direction)
@@ -248,11 +291,10 @@ void Mouse2::SetMotors(float forward, float right, float rot)
 {
     float denominator{std::max(std::abs(forward) + std::abs(right) + std::abs(rot), 1.0f)};
 
-    driver->SetMotors(
-        static_cast<int16_t>(((forward_pwm - right_pwm + rot_pwm) / denominator) * 4095.0f),
-        static_cast<int16_t>(((forward_pwm + right_pwm + rot_pwm) / denominator) * 4095.0f),
-        static_cast<int16_t>(((forward_pwm + right_pwm - rot_pwm) / denominator) * 4095.0f),
-        static_cast<int16_t>(((forward_pwm - right_pwm - rot_pwm) / denominator) * 4095.0f));
+    driver->SetMotors(static_cast<int16_t>((forward - right + rot) / denominator * 4095.0f),
+                      static_cast<int16_t>((forward + right + rot) / denominator * 4095.0f),
+                      static_cast<int16_t>((forward + right - rot) / denominator * 4095.0f),
+                      static_cast<int16_t>((forward - right - rot) / denominator * 4095.0f));
 }
 
 void Mouse2::MovedTile(Core::Direction direction)
@@ -276,5 +318,7 @@ void Mouse2::MovedTile(Core::Direction direction)
     x = std::clamp(x, 0.0f, 15.0f);
     y = std::clamp(y, 0.0f, 15.0f);
 }
+
+void Mouse2::CalibrateForward() { heading_diff = heading + GetGlobalForward().Degrees(); }
 
 } // namespace Firmware

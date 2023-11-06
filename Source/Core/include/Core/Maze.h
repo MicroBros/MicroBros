@@ -53,6 +53,9 @@ public:
     //! Get the closest direction based on rotation in degrees
     static Direction FromRot(float rot);
 
+    //! Get the degrees relative to Up/Forward being 0
+    int Degrees();
+
     //! Turn the Direction right n times
     inline Direction TurnRight(int n) noexcept
     {

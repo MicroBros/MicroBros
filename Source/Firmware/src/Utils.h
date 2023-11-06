@@ -31,9 +31,18 @@ inline float NormaliseRad(float x)
         x += PI;
     return x - PI;
 }
+
 inline float NormaliseDeg(float x)
 {
     x = std::fmod(x + 180, 360);
+    if (x < 0)
+        x += 180;
+    return x - 180;
+}
+
+inline int NormaliseDeg(int x)
+{
+    x = (x + 180) % 360;
     if (x < 0)
         x += 180;
     return x - 180;
