@@ -111,23 +111,21 @@ void MouseService::onDataWritten(const microbit_ble_evt_write_t *params)
         {
         // Reset
         case BLE_STRUCTURE(MouseService, MouseAction)::Reset:
+            LOG_INFO("[BLE] Reset");
+
             mouse->SetRunning(false);
             mouse->Reset();
 
             break;
         // Step
         case BLE_STRUCTURE(MouseService, MouseAction)::Step:
-            mouse->SetRunning(false);
-
-            // Wait until not running (finished movement)
-            while (mouse->IsMoving())
-            {
-                fiber_sleep(50);
-            }
-
             LOG_INFO("[BLE] Step");
 
-            mouse->Step();
+            mouse->SetRunning(false);
+
+            // Skip if already moving
+            if (!mouse->IsMoving())
+                mouse->Step();
 
             break;
         default:
@@ -152,6 +150,7 @@ void MouseService::Update()
 
     if (mouse->GetIter() != last_iter)
     {
+        LOG_DEBUG("[BLE] Updating maze");
         MazeUpdate();
         last_iter = mouse->GetIter();
         return;
@@ -202,8 +201,11 @@ void MouseService::MazeUpdate()
 
     UpdateTiles();
 
-    notifyChrValue(CHARACTERISTIC(MouseService, Maze), (const uint8_t *)tile_values.data(),
-                   sizeof(Core::MazeTile::ValueType) * tile_values.size());
+    // notify seems to cap at 20 bytes
+    // notifyChrValue(CHARACTERISTIC(MouseService, Maze), (const uint8_t *)tile_values.data(),
+    //               sizeof(Core::MazeTile::ValueType) * tile_values.size());
+
+    notifyChrValue(CHARACTERISTIC(MouseService, Maze), &dummy, 1);
 }
 
 }; // namespace Firmware::BLE

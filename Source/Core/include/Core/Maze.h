@@ -45,7 +45,7 @@ public:
 
         // Aliases
         Forward = Up,
-        Back = Down,
+        Backward = Down,
     };
 
     Direction(ValueEnum direction) : direction{direction} {}

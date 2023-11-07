@@ -55,6 +55,7 @@ public:
         void OnControlNotify(SimpleBLE::ByteArray data);
         void OnPositionNotify(SimpleBLE::ByteArray data);
         void OnMazeNotify(SimpleBLE::ByteArray data);
+        void OnMazUpdated(SimpleBLE::ByteArray data);
 
         void SendAction(BLE_STRUCTURE(MouseService, MouseAction) action);
         void UpdateControl();

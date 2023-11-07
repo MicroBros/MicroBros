@@ -113,7 +113,7 @@ void RemoteMouse::OnConnected()
     peripheral.notify(MICROBIT_BLE_SERVICE_CHARACTERISTIC(MouseService, Maze),
                       std::bind(&RemoteMouse::OnMazeNotify, this, std::placeholders::_1));
     // Manually read the maze
-    OnMazeNotify(peripheral.read(MICROBIT_BLE_SERVICE_CHARACTERISTIC(MouseService, Maze)));
+    OnMazUpdated(peripheral.read(MICROBIT_BLE_SERVICE_CHARACTERISTIC(MouseService, Maze)));
 }
 
 void RemoteMouse::OnDisconnected()
@@ -145,17 +145,23 @@ void RemoteMouse::OnPositionNotify(SimpleBLE::ByteArray payload)
 
 void RemoteMouse::OnMazeNotify(SimpleBLE::ByteArray payload)
 {
+    // Manually read the maze as notify cannot handle the entire payload :(
+    OnMazUpdated(peripheral.read(MICROBIT_BLE_SERVICE_CHARACTERISTIC(MouseService, Maze)));
+}
+
+void RemoteMouse::OnMazUpdated(SimpleBLE::ByteArray data)
+{
     // 1 tile is 1 byte
-    size_t size{payload.size() / sizeof(Core::MazeTile::ValueType)};
+    size_t size{data.size() / sizeof(Core::MazeTile::ValueType)};
     size_t side{size_t(std::sqrt(size))};
     // Verify the maze is square
     if ((side * side) != size)
     {
-        LOG_ERROR("Maze is not square, got side:{} and size:{}", side, payload.size());
+        LOG_ERROR("Maze is not square, got side:{} and size:{}", side, data.size());
     }
 
     // Update maze
-    std::span<Core::MazeTile::ValueType> tiles{(Core::MazeTile::ValueType *)payload.data(), size};
+    std::span<Core::MazeTile::ValueType> tiles{(Core::MazeTile::ValueType *)data.data(), size};
     mouse->SetMaze(new Core::Maze(side, side, tiles));
 }
 

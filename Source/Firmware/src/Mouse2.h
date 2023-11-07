@@ -48,7 +48,10 @@ public:
     //! Set if the mouse is running
     inline void SetRunning(bool running) noexcept { this->running = running; }
     //! Return if the mouse is currently finishing a move/step
-    inline bool IsMoving() noexcept { return IsRunning(); }
+    inline bool IsMoving() noexcept
+    {
+        return IsRunning() || (state != State::Stopped && state != State::Uninitialized);
+    }
     //! Set algorithm to be used after reset
     inline void SetResetAlgorithm(uint16_t index) noexcept { algorithm = index; }
     //! Get the step iter count
@@ -110,6 +113,12 @@ private:
     void SetMotors(float forward, float right, float rot);
     //! Calibrate the forward heading
     void CalibrateForward();
+
+#ifdef MOCK
+    float &GetDistanceAlias(Core::Direction direction);
+    //! Mock sensors
+    void MockSensors();
+#endif
 };
 
 } // namespace Firmware

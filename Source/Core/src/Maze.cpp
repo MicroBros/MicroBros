@@ -34,11 +34,11 @@ std::string_view Direction::ToString()
     switch (direction)
     {
     case Core::Direction::Up:
-        return "Up";
+        return "Up/Forward";
     case Core::Direction::Right:
         return "Right";
     case Core::Direction::Down:
-        return "Down";
+        return "Down/Backward";
     case Core::Direction::Left:
         return "Left";
     default:

@@ -75,6 +75,9 @@ void Mouse::Reset()
     y = 0.0;
     rot = 0.0;
     maze->ResetWalls();
+
+    // Set the start tile
+    maze->GetTile(0, 0) |= MazeTile::Start | MazeTile::Down;
 }
 
 } // namespace Core

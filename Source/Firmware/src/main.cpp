@@ -50,15 +50,12 @@ int main()
     CODAL_TIMESTAMP prev_time{uBit.timer.getTime()};
     while (1)
     {
-        if (mouse->IsRunning() || mouse->IsMoving())
-        {
-            CODAL_TIMESTAMP now{uBit.timer.getTime()};
+        CODAL_TIMESTAMP now{uBit.timer.getTime()};
 
-            // Run mouse
-            mouse->Run(now, now - prev_time);
+        // Run mouse
+        mouse->Run(now, now - prev_time);
 
-            prev_time = now;
-        }
+        prev_time = now;
 
         // Send update over BLE
         mouse_service->Update();

@@ -2,6 +2,7 @@
 
 #include <Core/Log.h>
 
+// #define MOCK // (Mock sensors, useful to test state machine without a working robot)
 #include "Mouse2.h"
 
 namespace Firmware
@@ -26,21 +27,30 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
     measurement_interval_ms = ultrasonics->GetMeasurementInterval();
 
     // Initialise WallFollower as default algorithm
-    // SetAlgorithm("WallFollower");
-    SetAlgorithm("FloodFill");
+    SetAlgorithm("WallFollower");
+    // SetAlgorithm("FloodFill");
 
+#ifndef MOCK
     // Make Jonathan happy and let the IR run a few cycles c:
     for (size_t i{0}; i < 8; ++i)
     {
         IRs->RunSignalProcessing();
         fiber_sleep(10);
     }
+#endif MOCK
 }
 
 void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 {
+#ifndef MOCK
+    // Read sensors
     IRs->RunSignalProcessing();
-    heading_avg.AddValue(NormaliseDeg(uBit.compass.heading()));
+#else
+    // Mock sensors
+    MockSensors();
+#endif
+
+    // heading_avg.AddValue(NormaliseDeg(uBit.compass.heading()));
 
     /*{
         // Seed headings
@@ -77,25 +87,27 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     }
 
     // Step the algorithm if requested
-    if (now > next_algorithm_step_ms)
+    if (now > next_algorithm_step_ms && IsMoving())
     {
-        if (!IsRunning())
-        {
-            state = State::Stopped;
-            return;
-        }
-
-        // Step the algorithm with current sensor data
-        StepAlgorithm(now);
         // Avoid stepping again until another tile change
         next_algorithm_step_ms = std::numeric_limits<CODAL_TIMESTAMP>::max();
+        // Step the algorithm with current sensor data
+        StepAlgorithm(now);
+
+#ifdef MOCK
+        // Just force move for mocking
+        if (state != State::Stopped)
+            MovedTile(GetGlobalForward());
+#endif
     }
 
     // FSM for movement states
     switch (state)
     {
     case State::Uninitialized:
-        Initialize(now);
+        // Only initialize if running
+        if (IsRunning())
+            Initialize(now);
         break;
     case State::MoveStraight:
         MoveStraight(now, 60);
@@ -148,10 +160,8 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
         ++itty;
         LOG_DEBUG("Tileyy={}", itty);
         // Register the tile move
-        MovedTile(GetDirection());
+        MovedTile(GetGlobalForward());
         LOG_DEBUG("Moved to tile x:{}, y:{}", static_cast<int>(x), static_cast<int>(y));
-
-        CalibrateForward();
 
         next_algorithm_step_ms =
             now + 200; // step the algorithm after 200 ms so we have passed the notch
@@ -235,11 +245,15 @@ void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
     if (right < 5.0f)
         GetMaze()->GetTile(x, y) |= global_right.TileSide();
 
+    LOG_DEBUG("Stepping algorithm, forward: {}, x:{} y:{} rot:{}", global_forward.ToString(),
+              static_cast<int>(x), static_cast<int>(y), static_cast<int>(rot));
+
     // Get the move directions
     auto move_direction_opt{GetAlgorithm()->Step(this, x, y, global_forward)};
     // Stop if no direction given by algorithm
     if (!move_direction_opt.has_value())
     {
+        LOG_ERROR("No move direction found my algorithm, stopping!");
         state = State::Stopped;
         return;
     }
@@ -278,8 +292,12 @@ void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
         LOG_DEBUG("Turn right");
     }
 
-    rot = move_direction.Degrees();
-    ++iter;
+    rot = dir.Degrees();
+    iter++;
+
+#ifdef MOCK
+    next_algorithm_step_ms = now + 500; // Force next step in 500ms
+#endif
 }
 
 float Mouse2::GetDistance(Core::Direction direction)
@@ -288,7 +306,7 @@ float Mouse2::GetDistance(Core::Direction direction)
     {
     case Core::Direction::Forward:
         return reverse_forward ? b : f;
-    case Core::Direction::Back:
+    case Core::Direction::Backward:
         return reverse_forward ? f : b;
     case Core::Direction::Left:
         return reverse_forward ? r : l;
@@ -299,14 +317,29 @@ float Mouse2::GetDistance(Core::Direction direction)
 
 Core::Direction Mouse2::GetGlobalForward()
 {
-    return Core::Direction::FromRot(reverse_forward ? (rot + 180.0f) : rot);
+    return Core::Direction::FromRot(reverse_forward ? std::fmod(rot + 180.0f, 360) : rot);
 }
 
 void Mouse2::Step()
 {
-    // TODO: This will start a step, basically the time from a sensor reading until the mouse is
-    // going to do the next one updating the map
-    // In short, it is a one tile move
+    // Return early if already moving
+    if (IsMoving())
+        return;
+
+#ifdef MOCK
+    // Mock sensors
+    MockSensors();
+#endif
+
+    // Step manually
+    StepAlgorithm(uBit.timer.getTime());
+
+#ifdef MOCK
+    // Just force move for mocking
+    if (state != State::Stopped)
+        MovedTile(GetGlobalForward());
+    state = State::Stopped;
+#endif
 }
 
 void Mouse2::Reset()
@@ -322,6 +355,7 @@ void Mouse2::Reset()
 
     // Reset state
     state = State::Uninitialized;
+    iter = 0; // Reset maze for MouseService
 }
 
 void Mouse2::SetMotors(float forward, float right, float rot)
@@ -365,5 +399,48 @@ void Mouse2::MovedTile(Core::Direction direction)
 }
 
 void Mouse2::CalibrateForward() { last_forward_heading = heading_avg.MeanDegrees(); }
+
+#ifdef MOCK
+
+float &Mouse2::GetDistanceAlias(Core::Direction direction)
+{
+    switch (direction.Value())
+    {
+    case Core::Direction::Forward:
+        return reverse_forward ? b : f;
+    case Core::Direction::Backward:
+        return reverse_forward ? f : b;
+    case Core::Direction::Left:
+        return reverse_forward ? r : l;
+    case Core::Direction::Right:
+        return reverse_forward ? l : r;
+    };
+}
+
+void Mouse2::MockSensors()
+{
+    if (y > 4.9f && x < 1.0f)
+    {
+        GetDistanceAlias(Core::Direction::Forward) = 8.0f;
+        GetDistanceAlias(Core::Direction::Right) = 6.1f;
+        GetDistanceAlias(Core::Direction::Left) = 4.1f;
+    }
+    else if (std::abs(y - 5) < 0.1f && x > 7.9f)
+    {
+        GetDistanceAlias(Core::Direction::Forward) = 8.0f;
+        GetDistanceAlias(Core::Direction::Right) = 4.1f;
+        GetDistanceAlias(Core::Direction::Left) = 6.1f;
+    }
+    else
+    {
+        GetDistanceAlias(Core::Direction::Forward) = 21.0f;
+        GetDistanceAlias(Core::Direction::Right) = 4.1f;
+        GetDistanceAlias(Core::Direction::Left) = 4.1f;
+    }
+
+    GetDistanceAlias(Core::Direction::Backward) = 4.0f;
+}
+
+#endif
 
 } // namespace Firmware
