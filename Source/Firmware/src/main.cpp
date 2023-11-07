@@ -26,14 +26,11 @@ int main()
 
     // Setup BLE services
     // auto motor_service{std::make_unique<Firmware::BLE::MotorService>(dfr0548.get())};
-    // auto mouse_service{std::make_unique<Firmware::BLE::MouseService>(mouse.get())};
+    auto mouse_service{std::make_unique<Firmware::BLE::MouseService>(mouse.get())};
 
     LOG_INFO("Initialised MicroMouse!");
 
-    // Used for button A toggle
-    // bool last_pressed{false};
-
-    CODAL_TIMESTAMP prev_time{uBit.timer.getTime()};
+    /*CODAL_TIMESTAMP prev_time{uBit.timer.getTime()};
     while (1)
     {
         CODAL_TIMESTAMP now{uBit.timer.getTime()};
@@ -45,29 +42,36 @@ int main()
 
         // Give at least 1ms
         fiber_sleep(1);
-    }
+    }*/
 
-    /*
-        while (1)
+    // Used for button A toggle
+    bool last_pressed{false};
+
+    CODAL_TIMESTAMP prev_time{uBit.timer.getTime()};
+    while (1)
+    {
+        if (mouse->IsRunning() || mouse->IsMoving())
         {
-            if (mouse->IsRunning() || mouse->IsMoving())
-            {
-                mouse->Run();
-            }
+            CODAL_TIMESTAMP now{uBit.timer.getTime()};
 
-            // Send update over BLE
-            mouse_service->Update();
+            // Run mouse
+            mouse->Run(now, now - prev_time);
 
-            // Simple toggle of running by pressing A
-            if (!last_pressed && uBit.buttonA.isPressed())
-            {
-                mouse->SetRunning(!mouse->IsRunning());
-                last_pressed = true;
-            }
-            else
-                last_pressed = false;
+            prev_time = now;
         }
-    */
+
+        // Send update over BLE
+        mouse_service->Update();
+
+        // Simple toggle of running by pressing A
+        if (!last_pressed && uBit.buttonA.isPressed())
+        {
+            mouse->SetRunning(!mouse->IsRunning());
+            last_pressed = true;
+        }
+        else
+            last_pressed = false;
+    }
 
     /*while (1)
     {

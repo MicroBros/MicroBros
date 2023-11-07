@@ -51,6 +51,8 @@ public:
     inline bool IsMoving() noexcept { return IsRunning(); }
     //! Set algorithm to be used after reset
     inline void SetResetAlgorithm(uint16_t index) noexcept { algorithm = index; }
+    //! Get the step iter count
+    inline int GetIter() noexcept { return iter; }
 
 private:
     //! External class objects
@@ -64,12 +66,13 @@ private:
     Core::Direction move_direction{Core::Direction::Forward}; // Move direction (local)
     CODAL_TIMESTAMP next_expected_tiley_ms;
     CODAL_TIMESTAMP next_algorithm_step_ms{std::numeric_limits<CODAL_TIMESTAMP>::max()};
+    CODAL_TIMESTAMP turn_started{0};
 
     bool reverse_forward;
-    int heading;
-    int current_forward_heading; // Heading to last forward
+    int last_forward_heading; // Heading to last forward
 
     // Filtering-related variables
+    Filters::MovingAverageFilter<int, 64> heading_avg;
     Filters::MovingAverageFilter<float, 3> sum_sides_avg;
 
     //! True if the Mouse2 is running autonomously, set false for manual control
@@ -98,7 +101,7 @@ private:
     void MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt);
     void MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt);
     //! Read the walls and step algorithm
-    void StepAlgorithm();
+    void StepAlgorithm(CODAL_TIMESTAMP now);
     //! Called with global direction of a move
     void MovedTile(Core::Direction moved_tile);
     //! Get global forward that is compensated for reverse forward

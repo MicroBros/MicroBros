@@ -36,7 +36,7 @@ inline float NormaliseDeg(float x)
 {
     x = std::fmod(x + 180, 360);
     if (x < 0)
-        x += 180;
+        x += 360;
     return x - 180;
 }
 
@@ -44,8 +44,12 @@ inline int NormaliseDeg(int x)
 {
     x = (x + 180) % 360;
     if (x < 0)
-        x += 180;
+        x += 360;
     return x - 180;
 }
+
+// Assumes parameters are in range [-180, 180]
+// Returns shortest diff range with alpha in focus
+inline int ShortestDeg(int alpha, int beta) { int diff = alpha - beta; }
 
 } // namespace Firmware

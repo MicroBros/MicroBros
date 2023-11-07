@@ -52,6 +52,7 @@ private:
     BLE_STRUCTURE(MouseService, AlgorithmCount) algorithm_index;
     std::array<Core::MazeTile::ValueType, 16 * 16> tile_values{};
     std::array<char, MAX_ALGORITHM_NAME + 1> algorithm_name_buffer;
+    int last_iter{0};
 };
 
 }; // namespace Firmware::BLE

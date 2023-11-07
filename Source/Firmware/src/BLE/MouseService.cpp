@@ -150,6 +150,13 @@ void MouseService::Update()
     if (!getConnected())
         return;
 
+    if (mouse->GetIter() != last_iter)
+    {
+        MazeUpdate();
+        last_iter = mouse->GetIter();
+        return;
+    }
+
     // Check if running has been toggled
     if (control.running != mouse->IsRunning() ||
         control.current_algorithm != mouse->GetAlgorithmIndex())

@@ -2,6 +2,7 @@
 
 #include <MicroBit.h>
 #include <deque>
+#include <numbers>
 #include <span>
 
 namespace Firmware::Filters
@@ -58,7 +59,7 @@ public:
         queue.push_back(value);
     }
 
-    inline T Sum()
+    inline T Mean()
     {
         T sum = 0.0;
         for (T d : queue)
@@ -67,10 +68,24 @@ public:
         return sum / queue.size();
     }
 
-    inline T AddValueAndSum(T value)
+    inline T MeanDegrees()
+    {
+        float x{0.0};
+        float y{0.0};
+
+        for (T v : queue)
+        {
+            x += std::cos(v * std::numbers::pi / 180.0f);
+            y += std::sin(v * std::numbers::pi / 180.0f);
+        }
+
+        return std::atan2(y, x) * 180.0f / std::numbers::pi;
+    }
+
+    inline T AddValueAndMean(T value)
     {
         AddValue(value);
-        return Sum();
+        return Mean();
     }
 
 private:
