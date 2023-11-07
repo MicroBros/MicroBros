@@ -13,10 +13,10 @@ namespace Firmware::Drivers
 IR::IR(std::vector<Sensor> sensors, NRF52Pin &emitter_pin, uint16_t sample_rate)
     : sensors{sensors}, sample_rate{sample_rate}
 {
-    // Set analog period for emitting
-    emitter_pin.setAnalogPeriodUs((1'000'000 / sample_rate) * SAMPLES_PER_FLASH);
     // Half on, half off
     emitter_pin.setAnalogValue(512);
+    // Set analog period for emitting
+    emitter_pin.setAnalogPeriodUs((1'000'000 / sample_rate) * SAMPLES_PER_FLASH);
 
     // Setup ADCs
     for (auto &sensor : sensors)
