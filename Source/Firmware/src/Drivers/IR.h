@@ -12,7 +12,6 @@
 
 #define IR_SAMPLE_SIZE 512
 #define IR_SAMPLE_TYPE float
-#define IR_SINK_SIZE 2
 
 namespace Firmware::Drivers
 {
@@ -40,6 +39,19 @@ public:
         float exp;
     };
 
+    //! Custom codal::DataSink for IR, used to handle signal processed data and update Sensor value
+    class IRSink : public codal::DataSink
+    {
+    public:
+        IRSink(DataSource *source, Sensor &sensor);
+
+        int pullRequest();
+
+    private:
+        codal::DataSource *source;
+        Sensor &sensor;
+    };
+
     /*! \brief Constructor for IR
         - \p sensors is a vector of pins for *sense* and a pointer to value to update
        with a float distance in (cm) as argument
@@ -48,8 +60,6 @@ public:
     IR(std::vector<Sensor> sensors, NRF52Pin &emitter_pin, uint16_t sample_rate = 4800);
 
     inline uint16_t GetSamplingRate() { return sample_rate; }
-    //! Run a cycle of signal processing with filters
-    void RunSignalProcessing();
 
 private:
     struct SensorData
@@ -57,7 +67,7 @@ private:
         std::unique_ptr<NRF52ADCChannel> adc_channel;
         std::unique_ptr<Filters::BandpassFilter> bandpass;
         std::unique_ptr<Filters::AbsoluteFilter> abs;
-        std::unique_ptr<CircularSink<IR_SINK_SIZE>> sink;
+        std::unique_ptr<IRSink> sink;
         std::unique_ptr<codal::LowPassFilter> lowpass;
     };
 

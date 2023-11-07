@@ -30,22 +30,13 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
     SetAlgorithm("WallFollower");
     // SetAlgorithm("FloodFill");
 
-#ifndef MOCK
     // Make Jonathan happy and let the IR run a few cycles c:
-    for (size_t i{0}; i < 8; ++i)
-    {
-        IRs->RunSignalProcessing();
-        fiber_sleep(10);
-    }
-#endif MOCK
+    fiber_sleep(80);
 }
 
 void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 {
-#ifndef MOCK
-    // Read sensors
-    IRs->RunSignalProcessing();
-#else
+#ifdef MOCK
     // Mock sensors
     MockSensors();
 #endif

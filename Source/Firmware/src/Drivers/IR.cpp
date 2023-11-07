@@ -10,6 +10,26 @@ const size_t SAMPLES_PER_FLASH{2};
 namespace Firmware::Drivers
 {
 
+IR::IRSink::IRSink(DataSource *source, Sensor &sensor) : source{source}, sensor{sensor}
+{
+    source->connect(*this);
+}
+
+int IR::IRSink::pullRequest()
+{
+    auto buffer{source->pull()};
+    auto format{source->getFormat()};
+
+    uint8_t *end = buffer.getBytes() + (buffer.length() - (buffer.length() / 2));
+    int value = StreamNormalizer::readSample[format](end);
+
+    // Attempt to normalise the distance
+    *sensor.value = std::clamp(
+        std::pow(std::max(value - sensor.base, 0.1f), sensor.exp) * sensor.scale, 0.0f, 20.0f);
+
+    return DEVICE_OK;
+}
+
 IR::IR(std::vector<Sensor> sensors, NRF52Pin &emitter_pin, uint16_t sample_rate)
     : sensors{sensors}, sample_rate{sample_rate}
 {
@@ -41,25 +61,8 @@ IR::IR(std::vector<Sensor> sensors, NRF52Pin &emitter_pin, uint16_t sample_rate)
         data.push_back({.adc_channel = std::move(adc),
                         .bandpass = std::move(bandpass),
                         .abs = std::move(abs),
-                        .sink = std::make_unique<CircularSink<IR_SINK_SIZE>>(lowpass.get()),
+                        .sink = std::make_unique<IRSink>(lowpass.get(), sensor),
                         .lowpass = std::move(lowpass)});
-    }
-}
-
-void IR::RunSignalProcessing()
-{
-    for (size_t i{0}; i < data.size(); ++i)
-    {
-        auto buffer{data[i].sink->GetBuffer()};
-        auto format{data[i].lowpass->getFormat()};
-
-        uint8_t *end = buffer.getBytes() + (buffer.length() - (buffer.length() / 2));
-        int value = StreamNormalizer::readSample[format](end);
-
-        // Attempt to normalise the distance
-        *sensors[i].value = std::clamp(
-            std::pow(std::max(value - sensors[i].base, 0.1f), sensors[i].exp) * sensors[i].scale,
-            0.0f, 20.0f);
     }
 }
 
