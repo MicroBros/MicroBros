@@ -41,6 +41,7 @@ IR::IR(std::vector<Sensor> sensors, NRF52Pin &emitter_pin, uint16_t sample_rate)
         data.push_back({.adc_channel = std::move(adc),
                         .bandpass = std::move(bandpass),
                         .abs = std::move(abs),
+                        .sink = std::make_unique<CircularSink<IR_SINK_SIZE>>(lowpass.get()),
                         .lowpass = std::move(lowpass)});
     }
 }
@@ -49,9 +50,9 @@ void IR::RunSignalProcessing()
 {
     for (size_t i{0}; i < data.size(); ++i)
     {
-        auto &output{data[i].lowpass};
-        auto buffer{output->pull()};
-        auto format{output->getFormat()};
+        auto buffer{data[i].sink->GetBuffer()};
+        auto format{data[i].lowpass->getFormat()};
+
         uint8_t *end = buffer.getBytes() + (buffer.length() - (buffer.length() / 2));
         int value = StreamNormalizer::readSample[format](end);
 

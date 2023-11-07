@@ -8,9 +8,11 @@
 
 #include "../Filters.h"
 #include "../Timer.h"
+#include "../Utils.h"
 
 #define IR_SAMPLE_SIZE 512
 #define IR_SAMPLE_TYPE float
+#define IR_SINK_SIZE 2
 
 namespace Firmware::Drivers
 {
@@ -55,6 +57,7 @@ private:
         std::unique_ptr<NRF52ADCChannel> adc_channel;
         std::unique_ptr<Filters::BandpassFilter> bandpass;
         std::unique_ptr<Filters::AbsoluteFilter> abs;
+        std::unique_ptr<CircularSink<IR_SINK_SIZE>> sink;
         std::unique_ptr<codal::LowPassFilter> lowpass;
     };
 
