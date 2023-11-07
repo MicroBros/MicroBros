@@ -33,15 +33,15 @@ int main()
     // Used for button A toggle
     // bool last_pressed{false};
 
-    CODAL_TIMESTAMP start{uBit.timer.getTime()};
+    CODAL_TIMESTAMP prev_time{uBit.timer.getTime()};
     while (1)
     {
         CODAL_TIMESTAMP now{uBit.timer.getTime()};
 
         // Run mouse
-        mouse->Run(now, now - start);
+        mouse->Run(now, now - prev_time);
 
-        start = now;
+        prev_time = now;
 
         // Give at least 1ms
         fiber_sleep(1);

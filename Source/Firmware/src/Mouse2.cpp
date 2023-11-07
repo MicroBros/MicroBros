@@ -141,12 +141,12 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 {
     // Get the current heading in degrees
-    int current_heading{NormaliseDeg(heading - heading_diff)};
-    int wanted_heading_diff{NormaliseDeg(GetGlobalForward().Degrees() - current_heading)};
-    LOG_DEBUG("wanted_heading_diff:{}, current_heading:{}", wanted_heading_diff, current_heading);
+    int heading_diff{NormaliseDeg(heading - current_forward_heading)};
+    LOG_DEBUG("heading_diff:{}, heading:{}", heading_diff, heading);
     fiber_sleep(10);
 
-    if (wanted_heading_diff < 5 && wanted_heading_diff > -5)
+    // End the turn after having turned ~85 degrees
+    if (heading_diff > 85 || heading_diff < -85)
     {
         // TODO: Do algorithm step
         state = State::MoveStraight;
@@ -319,6 +319,6 @@ void Mouse2::MovedTile(Core::Direction direction)
     y = std::clamp(y, 0.0f, 15.0f);
 }
 
-void Mouse2::CalibrateForward() { heading_diff = heading + GetGlobalForward().Degrees(); }
+void Mouse2::CalibrateForward() { current_forward_heading = heading; }
 
 } // namespace Firmware

@@ -67,7 +67,7 @@ private:
 
     bool reverse_forward;
     int heading;
-    int heading_diff; // Heading difference to forward
+    int current_forward_heading; // Heading to last forward
 
     // Filtering-related variables
     Filters::MovingAverageFilter<float, 3> sum_sides_avg;
