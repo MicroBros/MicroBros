@@ -201,12 +201,14 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     float turning{move_direction == Core::Direction::Left ? -1.0f : 1.0f};
 
     // if (now - turn_started > 750)
-    if (now - turn_started > 750 &&
-        (GetDistance(Core::Direction::Forward) < 8.0f || left < 4.9f || right < 4.9f))
+    if ((now - turn_started > 800 &&
+         (GetDistance(Core::Direction::Forward) < 6.0f || left < 4.9f || right < 4.9f)) ||
+        now - turn_started > 1000)
     {
-        state = State::MoveStraight;
-        next_algorithm_step_ms = now + 1000;
+        MovedTile(move_direction);
+        next_algorithm_step_ms = now + 950;
         next_expected_tiley_ms = next_algorithm_step_ms + 250;
+        state = State::MoveStraight;
     }
     else if (now - turn_started > 250 && now - turn_started < 450)
     {
