@@ -353,6 +353,7 @@ void Mouse2::Reset()
     }
 
     // Reset state
+    SetMotors(0, 0, 0);
     state = State::Uninitialized;
     iter = 0; // Reset maze for MouseService
 }
