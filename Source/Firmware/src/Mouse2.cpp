@@ -73,15 +73,10 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 
     // LOG_INFO("Left: {}cm, Right: {}cm", l, r);
 
-    // Stop at end
-    float forward{GetDistance(Core::Direction::Forward)};
-    if (state == State::MoveStraight && forward < 4.5f)
-    {
-        state = State::Stopped;
-    }
-
     // Step the algorithm if requested
-    if (now > next_algorithm_step_ms && IsMoving())
+    if ((now > next_algorithm_step_ms ||
+         state == State::MoveStraight && GetDistance(Core::Direction::Forward) < 3.5f) &&
+        IsMoving())
     {
         // Avoid stepping again until another tile change
         next_algorithm_step_ms = std::numeric_limits<CODAL_TIMESTAMP>::max();
@@ -202,21 +197,23 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 
     float diff{left - right};
     */
-    if (now - turn_started > 800)
+    float turning{move_direction == Core::Direction::Left ? -1.0f : 1.0f};
+
+    // if (now - turn_started > 750)
+    if (now - turn_started > 750 &&
+        (GetDistance(Core::Direction::Forward) < 8.0f || left < 4.9f || right < 4.9f))
     {
         state = State::MoveStraight;
+        next_algorithm_step_ms = now + 2000;
+        next_expected_tiley_ms = next_expected_tiley_ms + 250;
     }
-    else if (now - turn_started > 350 && now - turn_started < 500)
+    else if (now - turn_started > 250 && now - turn_started < 450)
     {
-        SetMotors(1.0f, 0.0f, 0.2f);
+        SetMotors(0.9f, 0.0f, turning * 0.5f);
     }
-    else if (move_direction == Core::Direction::Right)
+    else
     {
-        SetMotors(0.10f, 0.50f, 1.0f);
-    }
-    else if (move_direction == Core::Direction::Left)
-    {
-        SetMotors(0.10f, -0.50f, -1.0f);
+        SetMotors(0.10f, turning * 0.3f, turning * 1.0f);
     }
 }
 
