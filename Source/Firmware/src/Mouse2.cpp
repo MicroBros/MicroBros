@@ -202,19 +202,21 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 
     float diff{left - right};
     */
-    if (now - turn_started > 650)
+    if (now - turn_started > 800)
     {
         state = State::MoveStraight;
     }
-    if (move_direction == Core::Direction::Right)
+    else if (now - turn_started > 350 && now - turn_started < 500)
     {
-        float move_right{right_pid.Regulate(4.5, right, dt)};
-        SetMotors(0.08f, move_right + 0.45f, 1);
+        SetMotors(1.0f, 0.0f, 0.2f);
+    }
+    else if (move_direction == Core::Direction::Right)
+    {
+        SetMotors(0.10f, 0.50f, 1.0f);
     }
     else if (move_direction == Core::Direction::Left)
     {
-        float move_left{right_pid.Regulate(4.5, left, dt)};
-        SetMotors(0.08f, -move_left - 0.45f, -1);
+        SetMotors(0.10f, -0.50f, -1.0f);
     }
 }
 
