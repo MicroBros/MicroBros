@@ -41,6 +41,9 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     MockSensors();
 #endif
 
+    // Run IR sensors
+    fiber_sleep(1);
+
     // heading_avg.AddValue(NormaliseDeg(uBit.compass.heading()));
 
     /*{
