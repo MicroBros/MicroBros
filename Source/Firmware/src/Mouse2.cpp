@@ -162,7 +162,8 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     forward_pwm = 1;
     right_pwm = right_pid.Regulate(0, diff, dt);
     // Set rotation too so we end up straight
-    rot_pwm = right_pwm * 0.75;
+
+    rot_pwm = right_pwm * 0.85;
 
     // Act
     SetMotors(forward_pwm, right_pwm, rot_pwm);
@@ -204,8 +205,8 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
         (GetDistance(Core::Direction::Forward) < 8.0f || left < 4.9f || right < 4.9f))
     {
         state = State::MoveStraight;
-        next_algorithm_step_ms = now + 2000;
-        next_expected_tiley_ms = next_expected_tiley_ms + 250;
+        next_algorithm_step_ms = now + 1000;
+        next_expected_tiley_ms = next_algorithm_step_ms + 250;
     }
     else if (now - turn_started > 250 && now - turn_started < 450)
     {
@@ -233,10 +234,18 @@ void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
     // Sense walls
     if (front < 20.0f)
         GetMaze()->GetTile(x, y) |= global_forward.TileSide();
+    else
+        GetMaze()->GetTile(x, y) &= ~global_forward.TileSide();
+
     if (left < 5.0f)
         GetMaze()->GetTile(x, y) |= global_left.TileSide();
+    else
+        GetMaze()->GetTile(x, y) &= ~global_left.TileSide();
+
     if (right < 5.0f)
         GetMaze()->GetTile(x, y) |= global_right.TileSide();
+    else
+        GetMaze()->GetTile(x, y) &= ~global_right.TileSide();
 
     LOG_DEBUG("Stepping algorithm, forward: {}, x:{} y:{} rot:{}", global_forward.ToString(),
               static_cast<int>(x), static_cast<int>(y), static_cast<int>(rot));
@@ -308,10 +317,7 @@ float Mouse2::GetDistance(Core::Direction direction)
     };
 }
 
-Core::Direction Mouse2::GetGlobalForward()
-{
-    return Core::Direction::FromRot(reverse_forward ? std::fmod(rot + 180.0f, 360) : rot);
-}
+Core::Direction Mouse2::GetGlobalForward() { return Core::Direction::FromRot(rot); }
 
 void Mouse2::Step()
 {
@@ -360,7 +366,7 @@ void Mouse2::SetMotors(float forward, float right, float rot)
     {
         forward *= -1;
         right *= -1;
-        rot *= -1;
+        // rot *= -1;
     }
 
     driver->SetMotors(static_cast<int16_t>((forward - right + rot) / denominator * 4095.0f),

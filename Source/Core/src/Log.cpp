@@ -29,6 +29,8 @@ std::string_view GetLogLevelString(const Logger::LogLevel level)
 void Logger::Log(Logger::LogLevel level, std::string_view text, bool newline)
 {
 #ifdef FIRMWARE
+
+#if 0
     // Print the log level
     if (level != LogLevel::None)
     {
@@ -48,6 +50,8 @@ void Logger::Log(Logger::LogLevel level, std::string_view text, bool newline)
 
     if (newline)
         uBit.serial.putc('\n');
+#endif
+
 #else
     if (level != LogLevel::None)
         fmt::print("{} {}", GetLogLevelString(level), text);
