@@ -75,7 +75,7 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 
     // Step the algorithm if requested
     if ((now > next_algorithm_step_ms ||
-         state == State::MoveStraight && GetDistance(Core::Direction::Forward) < 3.5f) &&
+         (state == State::MoveStraight && GetDistance(Core::Direction::Forward) < 3.5f)) &&
         IsMoving())
     {
         // Avoid stepping again until another tile change
@@ -200,24 +200,35 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     */
     float turning{move_direction == Core::Direction::Left ? -1.0f : 1.0f};
 
+    CODAL_TIMESTAMP turn_time{now - turn_started};
+
     // if (now - turn_started > 750)
-    if ((now - turn_started > 800 &&
-         (GetDistance(Core::Direction::Forward) < 6.0f || left < 4.9f || right < 4.9f)) ||
-        now - turn_started > 1000)
+    if ((turn_time > 800 &&
+         (GetDistance(Core::Direction::Forward) < 12.0f || left < 4.9f || right < 4.9f)) ||
+        turn_time > 850)
     {
-        MovedTile(move_direction);
-        next_algorithm_step_ms = now + 950;
-        next_expected_tiley_ms = next_algorithm_step_ms + 250;
+        // MovedTile(GetGlobalForward());
+        next_algorithm_step_ms = now + 2000;
+        next_expected_tiley_ms = now + 450;
         state = State::MoveStraight;
-    }
-    else if (now - turn_started > 250 && now - turn_started < 450)
-    {
-        SetMotors(0.9f, 0.0f, turning * 0.5f);
     }
     else
     {
-        SetMotors(0.10f, turning * 0.3f, turning * 1.0f);
+        float time{std::clamp(turn_time / 800.0f, 0.0f, 1.0f)};
+        SetMotors(0.20f * (0.8f - time),
+                  turn_time > 600 ? -turning * 0.25f : turning * 0.25f * (0.8f - time),
+                  turning * (1.1f - time));
     }
+    // Middle of turn
+    /*else if (turn_time > 200 && turn_time < 450)
+    {
+        SetMotors(0.5f, -turning * 0.1f, turning * 0.5f);
+    }
+    // Start / end of turn
+    else
+    {
+        SetMotors(turn_time > 450 ? 0.00f : 0.10f, turning * 0.1f, turning * 1.0f);
+    }*/
 }
 
 void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
@@ -249,8 +260,9 @@ void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
     else
         GetMaze()->GetTile(x, y) &= ~global_right.TileSide();
 
-    LOG_DEBUG("Stepping algorithm, forward: {}, x:{} y:{} rot:{}", global_forward.ToString(),
-              static_cast<int>(x), static_cast<int>(y), static_cast<int>(rot));
+    LOG_DEBUG("Stepping algorithm, current forward(global): {}, x:{} y:{} rot:{}",
+              global_forward.ToString(), static_cast<int>(x), static_cast<int>(y),
+              static_cast<int>(rot));
 
     // Get the move directions
     auto move_direction_opt{GetAlgorithm()->Step(this, x, y, global_forward)};
@@ -261,6 +273,8 @@ void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
         state = State::Stopped;
         return;
     }
+
+    LOG_DEBUG("Next forward(global): {}", move_direction_opt.value().ToString());
 
     auto dir{move_direction_opt.value()};
 
@@ -316,6 +330,8 @@ float Mouse2::GetDistance(Core::Direction direction)
         return reverse_forward ? r : l;
     case Core::Direction::Right:
         return reverse_forward ? l : r;
+    default:
+        return 0;
     };
 }
 
