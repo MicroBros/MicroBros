@@ -35,6 +35,8 @@ public:
         //! Value to update with the distance in cm
         std::atomic<float> *value;
 
+        std::atomic<float> *last_value{nullptr};
+
         Filters::MovingAverageFilter<float, 2> filter{};
     };
 

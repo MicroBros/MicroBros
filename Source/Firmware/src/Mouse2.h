@@ -87,6 +87,8 @@ private:
     //! Distance measurements to front, left and right obstructions
     std::atomic<float> f{0.0f};
     std::atomic<float> b{0.0f};
+    std::atomic<float> last_f{0.0f};
+    std::atomic<float> last_b{0.0f};
     std::atomic<float> l{0.0f};
     std::atomic<float> r{0.0f};
     const float LENGTH_OF_MOUSE = 16;

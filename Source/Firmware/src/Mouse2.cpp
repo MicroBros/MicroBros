@@ -13,8 +13,8 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
 
 {
     std::vector<Drivers::HCSR04::Sensor> sensor_pins = {
-        {.echo_pin = uBit.io.P13, .trig_pin = uBit.io.P14, .value = &f},
-        {.echo_pin = uBit.io.P15, .trig_pin = uBit.io.P16, .value = &b}};
+        {.echo_pin = uBit.io.P13, .trig_pin = uBit.io.P14, .value = &f, .last_value = &last_f},
+        {.echo_pin = uBit.io.P15, .trig_pin = uBit.io.P16, .value = &b, .last_value = &last_b}};
 
     std::vector<Drivers::IR::Sensor> IR_pins = {
         {.sense_pin = uBit.io.P1, .value = &l, .base = 360, .scale = 0.01f, .exp = 1.181f},
@@ -143,10 +143,27 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     }
 
     // Correct left and right in case there is no wall present
-    if (left > right && left > 5.5f)
+    if (left > 5.5f)
         left = 16.0f - 7.8f - right;
-    if (right > left && right > 5.5f)
+    if (right > 5.5f)
         right = 16.0f - 7.8f - left;
+
+    /*const float IR_FALLBACK_DIST{16.0f - 7.8f};
+    const float IR_DIST_THRESHOLD{5.5f};
+    if (left < right)
+    {
+        if (left > IR_DIST_THRESHOLD)
+            left = IR_FALLBACK_DIST - right;
+        if (right > IR_DIST_THRESHOLD)
+            right = IR_FALLBACK_DIST - left;
+    }
+    else
+    {
+        if (right > IR_DIST_THRESHOLD)
+            right = IR_FALLBACK_DIST - left;
+        if (left > IR_DIST_THRESHOLD)
+            left = IR_FALLBACK_DIST - right;
+    }*/
 
     float diff{left - right};
 
@@ -224,7 +241,7 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     }
     else
     {
-        float time{std::clamp(turn_time / 900.0f, 0.0f, 1.0f)};
+        float time{std::clamp(turn_time / 800.0f, 0.0f, 1.0f)};
         // The most cursed math
         float forward{0.45f * (0.2f + 0.8f * (1.0f - time))};
         float right{turn_time > 600 ? -turning * 0.45f : turning * 0.40f * (1.0f - time)};
@@ -257,8 +274,10 @@ void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
     auto global_right{global_forward.TurnRight()};
     auto global_backward{global_forward.TurnRight(2)};
 
+    float last_front{reverse_forward ? last_b : last_f};
+
     // Sense walls
-    if (front < 20.0f)
+    if (front < 20.0f && last_front < 23.0f)
         GetMaze()->GetTile(x, y) |= global_forward.TileSide();
     else
         GetMaze()->GetTile(x, y) &= ~global_forward.TileSide();
