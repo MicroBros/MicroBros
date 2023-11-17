@@ -3,8 +3,10 @@
 
 #include <Core/Log.h>
 
+#ifdef DEVICE_BLE
 #include "BLE/MotorService.h"
 #include "BLE/MouseService.h"
+#endif
 #include "Drivers/DFR0548.h"
 #include "Mouse2.h"
 
@@ -24,9 +26,11 @@ int main()
     // Create mouse impl
     auto mouse{std::make_unique<Firmware::Mouse2>(uBit, dfr0548.get())};
 
-    // Setup BLE services
-    // auto motor_service{std::make_unique<Firmware::BLE::MotorService>(dfr0548.get())};
+// Setup BLE services
+// auto motor_service{std::make_unique<Firmware::BLE::MotorService>(dfr0548.get())};
+#ifdef DEVICE_BLE
     auto mouse_service{std::make_unique<Firmware::BLE::MouseService>(mouse.get())};
+#endif
 
     LOG_INFO("Initialised MicroMouse!");
 
@@ -58,8 +62,9 @@ int main()
         prev_time = now;
 
         // Send update over BLE
+#ifdef DEVICE_BLE
         mouse_service->Update();
-
+#endif
         // Simple toggle of running by pressing A
         if (!last_pressed && uBit.buttonA.isPressed())
         {

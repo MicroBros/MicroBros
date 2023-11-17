@@ -22,7 +22,7 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
 
     sensor_count = sensor_pins.size();
     prev_time_ms = uBit.timer.getTime();
-    ultrasonics = std::make_unique<Drivers::HCSR04>(sensor_pins);
+    ultrasonics = std::make_unique<Drivers::HCSR04>(sensor_pins, 24);
     IRs = std::make_unique<Drivers::IR>(IR_pins, uBit.io.P0);
     measurement_interval_ms = ultrasonics->GetMeasurementInterval();
 
@@ -74,7 +74,7 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     // LOG_INFO("Left: {}cm, Right: {}cm", l, r);
 
     // Step the algorithm if requested
-    if ((now > next_algorithm_step_ms ||
+    if (((now > next_algorithm_step_ms && state != State::Stopped) ||
          (state == State::MoveStraight && GetDistance(Core::Direction::Forward) < 3.5f)) &&
         IsMoving())
     {
@@ -106,6 +106,10 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
         break;
     case State::Stopped:
         driver->StopMotors();
+        break;
+    default:
+        driver->StopMotors();
+        LOG_ERROR("INVALID STATE");
         break;
     }
 
@@ -159,9 +163,10 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     }
     last_summ = summ;
 
-    forward_pwm = 1;
+    forward_pwm = 0.8f;
     right_pwm = right_pid.Regulate(0, diff, dt);
-    // Set rotation too so we end up straight
+    // rot_pwm = rot_pid.Regulate(0, diff, dt);
+    //   Set rotation too so we end up straight
 
     rot_pwm = right_pwm * 0.85;
 
@@ -203,21 +208,25 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     CODAL_TIMESTAMP turn_time{now - turn_started};
 
     // if (now - turn_started > 750)
-    if ((turn_time > 800 &&
-         (GetDistance(Core::Direction::Forward) < 12.0f || left < 4.9f || right < 4.9f)) ||
-        turn_time > 850)
+    if (turn_time > 900)
+    //&&
+    //  (GetDistance(Core::Direction::Forward) < 12.0f || left < 4.9f || right < 4.9f)) ||
+    // turn_time > 950)
     {
         // MovedTile(GetGlobalForward());
-        next_algorithm_step_ms = now + 2000;
+        next_algorithm_step_ms = now + (turn_time * 0.9);
         next_expected_tiley_ms = now + 450;
         state = State::MoveStraight;
     }
     else
     {
         float time{std::clamp(turn_time / 800.0f, 0.0f, 1.0f)};
-        SetMotors(0.20f * (0.8f - time),
-                  turn_time > 600 ? -turning * 0.25f : turning * 0.25f * (0.8f - time),
-                  turning * (1.1f - time));
+        // The most cursed math
+        float forward{0.45f * (0.2f + 0.8f * (1.0f - time))};
+        float right{turn_time > 600 ? -turning * 0.45f : turning * 0.40f * (1.0f - time)};
+        float rotation{turning * (0.6f + 0.4f * (1.0f - time))};
+
+        SetMotors(forward, right, rotation);
     }
     // Middle of turn
     /*else if (turn_time > 200 && turn_time < 450)

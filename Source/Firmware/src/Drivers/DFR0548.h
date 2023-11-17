@@ -117,6 +117,7 @@ private:
     MotorValues set_motors;
     bool smooth_output;
     std::unique_ptr<Firmware::Timer> timer;
+    CODAL_TIMESTAMP last_update{0};
 
     constexpr static std::array<PCA9685Reg, 4> PCA9685_LED_BASE = {
         PCA9685Reg::LED6_ON_L, PCA9685Reg::LED4_ON_L, PCA9685Reg::LED2_ON_L, PCA9685Reg::LED0_ON_L};

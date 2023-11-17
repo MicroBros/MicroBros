@@ -30,7 +30,7 @@ void Logger::Log(Logger::LogLevel level, std::string_view text, bool newline)
 {
 #ifdef FIRMWARE
 
-#if 1
+#if 0
     // Print the log level
     if (level != LogLevel::None)
     {

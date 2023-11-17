@@ -71,24 +71,27 @@ DFR0548::DFR0548(MicroBit &uBit, MicroBitI2C &i2c, bool smooth_output, uint16_t 
     i2c.writeRegister(pca9685_address, static_cast<uint8_t>(PCA9685Reg::MODE1),
                       PCA9685Mode1::RESTART | PCA9685Mode1::AI | PCA9685Mode1::ALLCALL);
 
-    if (smooth_output)
+    i2c.setFrequency(NRF_TWIM_FREQ_250K);
+
+    /*if (smooth_output)
     {
         timer = std::make_unique<Firmware::Timer>([this]() { this->Update(); });
-        timer->EveryMs(8);
-    }
+        timer->EveryMs(10);
+    }*/
+
+    // Ensure the first stop is run
+    current_motors.m1 = -1;
 
     StopMotors();
 }
 
-inline int16_t Smooth(int16_t from, int16_t to, int16_t step) noexcept
+inline int16_t Smooth(CODAL_TIMESTAMP passed, int16_t from, int16_t to, int16_t step) noexcept
 {
     if (to == from)
-        return from;
-    /*if ((to < 0) == (from < 0))
-    {
-        return from = to;
-    }*/
-    else
+        return to;
+    else if (from != 0 && (to < 0) != (from < 0) && std::abs(from - to) < step)
+        return 0;
+    else if (passed >= 2)
     {
         if (to > from)
             return std::min(to, static_cast<int16_t>(from + step));
@@ -99,14 +102,16 @@ inline int16_t Smooth(int16_t from, int16_t to, int16_t step) noexcept
 
 void DFR0548::Update()
 {
+    CODAL_TIMESTAMP now{uBit.timer.getTime()};
+    CODAL_TIMESTAMP passed{now - last_update};
     // Check if there is no need for further smoothing
     if (current_motors == set_motors)
         return;
 
-    current_motors.m1 = Smooth(current_motors.m1, set_motors.m1, 100);
-    current_motors.m2 = Smooth(current_motors.m2, set_motors.m2, 100);
-    current_motors.m3 = Smooth(current_motors.m3, set_motors.m3, 100);
-    current_motors.m4 = Smooth(current_motors.m4, set_motors.m4, 100);
+    current_motors.m1 = Smooth(passed, current_motors.m1, set_motors.m1, 1024);
+    current_motors.m2 = Smooth(passed, current_motors.m2, set_motors.m2, 1024);
+    current_motors.m3 = Smooth(passed, current_motors.m3, set_motors.m3, 1024);
+    current_motors.m4 = Smooth(passed, current_motors.m4, set_motors.m4, 1024);
 
     // Addr + LED (motors) values
     std::array<uint8_t, 1 + (8 * 4)> buffer{};
@@ -122,6 +127,7 @@ void DFR0548::Update()
 
     // Write the values to the PCA9685 over I2C
     i2c.write(pca9685_address, buffer.data(), buffer.size());
+    last_update = now;
 }
 
 void DFR0548::SetMotors(int16_t m1_speed, int16_t m2_speed, int16_t m3_speed, int16_t m4_speed)
@@ -132,6 +138,8 @@ void DFR0548::SetMotors(int16_t m1_speed, int16_t m2_speed, int16_t m3_speed, in
         set_motors.m2 = m2_speed;
         set_motors.m3 = m3_speed;
         set_motors.m4 = m4_speed;
+
+        Update();
     }
     else
     {

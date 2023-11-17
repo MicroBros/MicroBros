@@ -6,6 +6,7 @@
 
 #include <MicroBit.h>
 
+#include "../Filters.h"
 #include "../Timer.h"
 
 namespace Firmware::Drivers
@@ -32,6 +33,8 @@ public:
         NRF52Pin &trig_pin;
         //! Value to update with the distance in cm
         float *value;
+
+        Filters::MovingAverageFilter<float, 3> filter{};
     };
 
     /*! \brief Constructor for HCSR04
