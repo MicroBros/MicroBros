@@ -22,7 +22,7 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
 
     sensor_count = sensor_pins.size();
     prev_time_ms = uBit.timer.getTime();
-    ultrasonics = std::make_unique<Drivers::HCSR04>(sensor_pins, 24);
+    ultrasonics = std::make_unique<Drivers::HCSR04>(sensor_pins, 30);
     IRs = std::make_unique<Drivers::IR>(IR_pins, uBit.io.P0);
     measurement_interval_ms = ultrasonics->GetMeasurementInterval();
 
@@ -136,10 +136,16 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     float left{GetDistance(Core::Direction::Left)};
     float right{GetDistance(Core::Direction::Right)};
 
+    // Stop the movement, used to avoid overcurrent on turn
+    if (stop_until > now)
+    {
+        return SetMotors(0, 0, 0);
+    }
+
     // Correct left and right in case there is no wall present
-    if (left > 5.5f)
+    if (left > right && left > 5.5f)
         left = 16.0f - 7.8f - right;
-    if (right > 5.5f)
+    if (right > left && right > 5.5f)
         right = 16.0f - 7.8f - left;
 
     float diff{left - right};
@@ -159,7 +165,6 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
         next_algorithm_step_ms =
             now + 200; // step the algorithm after 200 ms so we have passed the notch
         next_expected_tiley_ms = now + 500; // do not expect a tile change the next 500 ms
-        fiber_sleep(5);
     }
     last_summ = summ;
 
@@ -208,23 +213,22 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     CODAL_TIMESTAMP turn_time{now - turn_started};
 
     // if (now - turn_started > 750)
-    if (turn_time > 900)
-    //&&
-    //  (GetDistance(Core::Direction::Forward) < 12.0f || left < 4.9f || right < 4.9f)) ||
-    // turn_time > 950)
+    if ((turn_time > 850 &&
+         (GetDistance(Core::Direction::Forward) < 12.0f || left < 4.9f || right < 4.9f)) ||
+        turn_time > 900)
     {
         // MovedTile(GetGlobalForward());
-        next_algorithm_step_ms = now + (turn_time * 0.9);
+        next_algorithm_step_ms = now + turn_time;
         next_expected_tiley_ms = now + 450;
         state = State::MoveStraight;
     }
     else
     {
-        float time{std::clamp(turn_time / 800.0f, 0.0f, 1.0f)};
+        float time{std::clamp(turn_time / 900.0f, 0.0f, 1.0f)};
         // The most cursed math
         float forward{0.45f * (0.2f + 0.8f * (1.0f - time))};
         float right{turn_time > 600 ? -turning * 0.45f : turning * 0.40f * (1.0f - time)};
-        float rotation{turning * (0.6f + 0.4f * (1.0f - time))};
+        float rotation{turning * (0.7f + 0.3f * (1.0f - time))};
 
         SetMotors(forward, right, rotation);
     }
@@ -298,6 +302,7 @@ void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
     else if (dir == global_backward)
     {
         reverse_forward = !reverse_forward;
+        stop_until = now + 200;
         state = State::MoveStraight;
         move_direction = Core::Direction::Forward;
         LOG_DEBUG("Move forward & reverse");

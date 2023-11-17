@@ -132,17 +132,25 @@ void DFR0548::Update()
 
 void DFR0548::SetMotors(int16_t m1_speed, int16_t m2_speed, int16_t m3_speed, int16_t m4_speed)
 {
+    set_motors.m1 = m1_speed;
+    set_motors.m2 = m2_speed;
+    set_motors.m3 = m3_speed;
+    set_motors.m4 = m4_speed;
+
     if (smooth_output)
     {
-        set_motors.m1 = m1_speed;
-        set_motors.m2 = m2_speed;
-        set_motors.m3 = m3_speed;
-        set_motors.m4 = m4_speed;
-
         Update();
     }
     else
     {
+        // Avoid writing needlessly as I2C writes can hang
+        if (set_motors == current_motors)
+            return;
+        current_motors.m1 = m1_speed;
+        current_motors.m2 = m2_speed;
+        current_motors.m3 = m3_speed;
+        current_motors.m4 = m4_speed;
+
         // Addr + LED (motors) values
         std::array<uint8_t, 1 + (8 * 4)> buffer{};
 

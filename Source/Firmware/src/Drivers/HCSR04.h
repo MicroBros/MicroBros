@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <span>
@@ -32,9 +33,9 @@ public:
         //! Pin for the trigger for sensor module
         NRF52Pin &trig_pin;
         //! Value to update with the distance in cm
-        float *value;
+        std::atomic<float> *value;
 
-        Filters::MovingAverageFilter<float, 3> filter{};
+        Filters::MovingAverageFilter<float, 2> filter{};
     };
 
     /*! \brief Constructor for HCSR04

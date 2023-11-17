@@ -52,7 +52,7 @@ void HCSR04::OnPulse(Event event)
         float dist{us / 58.0f};
         if (dist > 399.0f)
             dist = 0.0f;
-        *(sensors[i].value) = sensors[i].filter.AddValueAndMean(dist);
+        *(sensors[i].value) = dist; // sensors[i].filter.AddValueAndMean(dist);
 
         last_measurements[i] = uBit.timer.getTime();
     }

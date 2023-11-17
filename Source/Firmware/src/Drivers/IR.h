@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <span>
@@ -30,7 +31,7 @@ public:
         //! Pin for IR sensor diode
         NRF52Pin &sense_pin;
         //! Value to update with the distance in cm
-        float *value;
+        std::atomic<float> *value;
         //! Base value (Distance when wood is obstructing on side, next to wheels)
         float base;
         //! Scale (to make it more cm like)

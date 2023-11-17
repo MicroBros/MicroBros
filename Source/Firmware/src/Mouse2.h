@@ -70,6 +70,7 @@ private:
     CODAL_TIMESTAMP next_expected_tiley_ms;
     CODAL_TIMESTAMP next_algorithm_step_ms{std::numeric_limits<CODAL_TIMESTAMP>::max()};
     CODAL_TIMESTAMP turn_started{0};
+    CODAL_TIMESTAMP stop_until{0};
 
     bool reverse_forward;
     int last_forward_heading; // Heading to last forward
@@ -84,10 +85,10 @@ private:
     int16_t algorithm{-1};
 
     //! Distance measurements to front, left and right obstructions
-    float f{0.0f};
-    float b{0.0f};
-    float l{0.0f};
-    float r{0.0f};
+    std::atomic<float> f{0.0f};
+    std::atomic<float> b{0.0f};
+    std::atomic<float> l{0.0f};
+    std::atomic<float> r{0.0f};
     const float LENGTH_OF_MOUSE = 16;
 
     int iter = 0;
