@@ -1,4 +1,6 @@
 # MicroBros
+<image src="Docs/Images/Car.jpg" width="300" alt="The system running">
+
 ## Introduction
 MicroBros is a project and group focused on creating a Micromouse to compete within the Smart Systems course at USN Kongsberg.
 
