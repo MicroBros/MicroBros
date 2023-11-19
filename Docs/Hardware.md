@@ -3,7 +3,7 @@
 ## Car
 The mecanum car chassis is fully custom and 3D-printed and as provided by our course instructor Richard.
 
-<image src="./Images/Car.jpg" width="300" alt="Car">
+<img src="./Images/Car.jpg" width="300">
 
 It uses the DFR0548 motor driver and breakout board to control the motors and connect sensors to the Micro:bit.
 
