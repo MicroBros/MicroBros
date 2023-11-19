@@ -40,11 +40,16 @@ if(DOXYGEN_FOUND)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Docs/Doxyfile.in ${DOXYFILE})
 
     add_custom_target(Docs ALL
-        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Images ${CMAKE_CURRENT_BINARY_DIR}/Docs/html/Docs/Images &&
+            ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Images ${CMAKE_CURRENT_BINARY_DIR}/Docs/html/Images &&
+            ${DOXYGEN_EXECUTABLE} ${DOXYFILE}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         VERBATIM
     )
+
+
     set_target_properties(Docs PROPERTIES EXCLUDE_FROM_ALL ON)
+
 else()
     message("Doxygen not found, not adding Docs target")
 endif()
