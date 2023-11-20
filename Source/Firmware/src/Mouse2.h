@@ -48,7 +48,12 @@ public:
     //! Get if the mouse is running (auto-execute steps)
     inline bool IsRunning() noexcept { return running; }
     //! Set if the mouse is running
-    inline void SetRunning(bool running) noexcept { this->running = running; }
+    inline void SetRunning(bool running) noexcept
+    {
+        this->running = running;
+        if (running && state == State::Stopped)
+            StepAlgorithm(uBit.timer.getTime());
+    }
     //! Return if the mouse is currently finishing a move/step
     inline bool IsMoving() noexcept
     {
@@ -98,6 +103,7 @@ private:
 
     int iter = 0;
     int turn_iter{-1};
+    bool turn_pid{false};
 
     uint16_t measurement_interval_ms;
 

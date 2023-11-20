@@ -34,20 +34,6 @@ int main()
 
     LOG_INFO("Initialised MicroMouse!");
 
-    /*CODAL_TIMESTAMP prev_time{uBit.timer.getTime()};
-    while (1)
-    {
-        CODAL_TIMESTAMP now{uBit.timer.getTime()};
-
-        // Run mouse
-        mouse->Run(now, now - prev_time);
-
-        prev_time = now;
-
-        // Give at least 1ms
-        fiber_sleep(1);
-    }*/
-
     // Used for button A toggle
     bool last_pressed{false};
 
@@ -74,41 +60,6 @@ int main()
         else
             last_pressed = false;
     }
-
-    /*while (1)
-    {
-        mouse.Run();
-
-        dfr0548.SetMotors(-BASE_SPEED, -BASE_SPEED, -BASE_SPEED, -BASE_SPEED);
-        uBit.sleep(2000);
-
-        dfr0548.StopMotors();
-        uBit.sleep(100);
-
-        dfr0548.SetMotors(BASE_SPEED, BASE_SPEED, BASE_SPEED, BASE_SPEED);
-        uBit.sleep(2000);
-
-        // Left-back
-        dfr0548.SetMotors(BASE_SPEED, 0, 0, 0);
-        uBit.sleep(2000);
-
-        // Left-front
-        dfr0548.SetMotors(0, BASE_SPEED, 0, 0);
-        uBit.sleep(2000);
-
-        // Right-back
-        dfr0548.SetMotors(0, 0, BASE_SPEED, 0);
-        uBit.sleep(2000);
-
-        // Right-front
-        dfr0548.SetMotors(0, 0, 0, BASE_SPEED);
-        uBit.sleep(2000);
-
-        // Stop the motors for 8 sec
-        dfr0548.SetMotors(0, 0, 0, 0);
-        uBit.sleep(8000);
-
-    }*/
 
     return 0;
 }

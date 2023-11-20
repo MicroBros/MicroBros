@@ -10,7 +10,7 @@ namespace Firmware
 {
 
 Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
-    : uBit{uBit}, driver{driver}, right_pid("r", 0.85, 0, 10)
+    : uBit{uBit}, driver{driver}, right_pid("r", 0.85, 0, 3)
 
 {
     std::vector<Drivers::HCSR04::Sensor> sensor_pins = {
@@ -23,7 +23,7 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
 
     sensor_count = sensor_pins.size();
     prev_time_ms = uBit.timer.getTime();
-    ultrasonics = std::make_unique<Drivers::HCSR04>(sensor_pins, 30);
+    ultrasonics = std::make_unique<Drivers::HCSR04>(sensor_pins, 60);
     IRs = std::make_unique<Drivers::IR>(IR_pins, uBit.io.P0);
     measurement_interval_ms = ultrasonics->GetMeasurementInterval();
 
@@ -43,7 +43,7 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 #endif
 
     // Run IR sensors
-    fiber_sleep(1);
+    fiber_sleep(0);
 
     // Step the algorithm if requested
     if (((now > next_algorithm_step_ms && state != State::Stopped) ||
@@ -114,10 +114,13 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     }
 
     // Correct left and right in case there is no wall present
-    if (left > 5.5f)
-        left = 16.0f - 7.8f - right;
-    if (right > 5.5f)
-        right = 16.0f - 7.8f - left;
+    if (left <= 5.5f || right <= 5.5f)
+    {
+        if (left > 5.5f)
+            left = 16.0f - 7.8f - right;
+        if (right > 5.5f)
+            right = 16.0f - 7.8f - left;
+    }
 
     float diff{left - right};
 
@@ -135,12 +138,16 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 
         next_algorithm_step_ms =
             now + 200; // step the algorithm after 200 ms so we have passed the notch
-        next_expected_tiley_ms = now + 500; // do not expect a tile change the next 500 ms
+        next_expected_tiley_ms = now + 450; // do not expect a tile change the next 450 ms
     }
     last_summ = summ;
 
     forward_pwm = 0.8f;
     right_pwm = right_pid.Regulate(0, diff, dt);
+
+    // Try to handle PID-ing being unreliable in T-junctions
+    if (iter == turn_iter && !turn_pid)
+        right_pwm *= 0.15f + std::clamp((now - turn_ended - 400) / 1200.0f, 0.0f, 0.85f);
 
     rot_pwm = right_pwm * 0.85;
 
@@ -157,28 +164,28 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 
     CODAL_TIMESTAMP turn_time{now - turn_started};
 
-    // if (now - turn_started > 750)
-    if ((turn_time > 850 &&
+    if ((turn_time > 900 &&
          (GetDistance(Core::Direction::Forward) < 12.0f || left < 4.9f || right < 4.9f)) ||
-        turn_time > 900)
+        turn_time > 950)
     {
         // MovedTile(GetGlobalForward());
-        next_algorithm_step_ms = now + turn_time;
-        next_expected_tiley_ms = now + turn_time / 2;
+        float forward{GetDistance(Core::Direction::Forward)};
+        next_algorithm_step_ms = now + (turn_time * (forward > 20.0f ? 1.0f : 0.7f));
+        next_expected_tiley_ms = now + 350;
         state = State::MoveStraight;
         turn_ended = now;
         turn_iter = iter;
+        turn_pid = left <= 5.5f && right <= 5.5f;
     }
     else
     {
-        float scale{0.8f};
         float time{std::clamp(turn_time / 800.0f, 0.0f, 1.0f)};
         // The most cursed math
         float forward{0.45f * (0.2f + 0.8f * (1.0f - time))};
         float right{turn_time > 600 ? -turning * 0.45f : turning * 0.40f * (1.0f - time)};
         float rotation{turning * (0.7f + 0.3f * (1.0f - time))};
 
-        SetMotors(forward * scale, right * scale, rotation * scale);
+        SetMotors(forward, right, rotation);
     }
 }
 
@@ -198,17 +205,17 @@ void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
     float last_front{reverse_forward ? last_b : last_f};
 
     // Sense walls
-    if (front < 20.0f && last_front < 23.0f)
+    if (front < 16.5f && last_front < 18.5f)
         GetMaze()->GetTile(x, y) |= global_forward.TileSide();
     else
         GetMaze()->GetTile(x, y) &= ~global_forward.TileSide();
 
-    if (left < 5.0f)
+    if (left < 5.3f)
         GetMaze()->GetTile(x, y) |= global_left.TileSide();
     else
         GetMaze()->GetTile(x, y) &= ~global_left.TileSide();
 
-    if (right < 5.0f)
+    if (right < 5.3f)
         GetMaze()->GetTile(x, y) |= global_right.TileSide();
     else
         GetMaze()->GetTile(x, y) &= ~global_right.TileSide();
