@@ -51,42 +51,4 @@ inline int NormaliseDeg(int x)
     return x - 180;
 }
 
-template <size_t SIZE> class CircularSink : public codal::DataSink
-{
-public:
-    CircularSink(DataSource *source, size_t nth = 1)
-        : source{source}, nth{std::max(nth, static_cast<size_t>(1))}
-    {
-        source->connect(*this);
-    }
-
-    inline int pullRequest()
-    {
-        // Let nth paramter make CircularSink only pull every nth parameter
-        i++;
-        if ((i % nth) != 0)
-        {
-            return DEVICE_OK;
-        }
-
-        size_t next{(index + 1) % SIZE};
-
-        // Make shared_ptr
-        buffers[next] = source->pull();
-
-        index = next;
-
-        return DEVICE_OK;
-    }
-
-    inline ManagedBuffer &GetBuffer() { return buffers[index]; }
-
-private:
-    codal::DataSource *source;
-    std::array<ManagedBuffer, SIZE> buffers;
-    std::atomic<size_t> index{0};
-    size_t nth;
-    size_t i{0};
-};
-
 } // namespace Firmware

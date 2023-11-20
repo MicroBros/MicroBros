@@ -45,35 +45,6 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     // Run IR sensors
     fiber_sleep(1);
 
-    // heading_avg.AddValue(NormaliseDeg(uBit.compass.heading()));
-
-    /*{
-        // Seed headings
-        for (size_t i{0}; i < 32; ++i)
-        {
-            heading_avg.AddValue(NormaliseDeg(uBit.compass.heading()));
-            fiber_sleep(2);
-        }
-
-        // Set forward
-        CalibrateForward();
-
-        while (true)
-        {
-            for (size_t i{0}; i < 32; ++i)
-            {
-                heading_avg.AddValue(NormaliseDeg(uBit.compass.heading()));
-                fiber_sleep(2);
-            }
-
-            int heading{heading_avg.MeanDegrees()};
-            int heading_diff{NormaliseDeg(heading - last_forward_heading)};
-            LOG_INFO("Heading: {}, diff: {}", heading, heading_diff);
-        }
-    }*/
-
-    // LOG_INFO("Left: {}cm, Right: {}cm", l, r);
-
     // Step the algorithm if requested
     if (((now > next_algorithm_step_ms && state != State::Stopped) ||
          (state == State::MoveStraight && GetDistance(Core::Direction::Forward) < 3.5f)) &&
@@ -133,7 +104,6 @@ void Mouse2::Initialize(CODAL_TIMESTAMP now)
 
 void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 {
-    // TODO: Detect when a tile has been barely entered and do StepAlgorithm
     float left{GetDistance(Core::Direction::Left)};
     float right{GetDistance(Core::Direction::Right)};
 
@@ -148,23 +118,6 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
         left = 16.0f - 7.8f - right;
     if (right > 5.5f)
         right = 16.0f - 7.8f - left;
-
-    /*const float IR_FALLBACK_DIST{16.0f - 7.8f};
-    const float IR_DIST_THRESHOLD{5.5f};
-    if (left < right)
-    {
-        if (left > IR_DIST_THRESHOLD)
-            left = IR_FALLBACK_DIST - right;
-        if (right > IR_DIST_THRESHOLD)
-            right = IR_FALLBACK_DIST - left;
-    }
-    else
-    {
-        if (right > IR_DIST_THRESHOLD)
-            right = IR_FALLBACK_DIST - left;
-        if (left > IR_DIST_THRESHOLD)
-            left = IR_FALLBACK_DIST - right;
-    }*/
 
     float diff{left - right};
 
@@ -188,8 +141,6 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 
     forward_pwm = 0.8f;
     right_pwm = right_pid.Regulate(0, diff, dt);
-    // rot_pwm = rot_pid.Regulate(0, diff, dt);
-    //   Set rotation too so we end up straight
 
     rot_pwm = right_pwm * 0.85;
 
@@ -199,33 +150,9 @@ void Mouse2::MoveStraight(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 
 void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 {
-    // Get the current heading in degrees
-    /*int heading{heading_avg.MeanDegrees()};
-    int heading_diff{NormaliseDeg(heading - last_forward_heading)};
-    LOG_DEBUG("heading_diff:{}, heading:{}, lfheading:{}", heading_diff, heading,
-              last_forward_heading);
-    fiber_sleep(10);
-
-    // End the turn after having turned ~85 degrees
-    if (heading_diff > 60 || heading_diff < -60)
-    {
-        // TODO: Do algorithm step
-        state = State::MoveStraight;
-    }*/
-
-    // TODO: Implement turning, use move_direction (which is local)
     float left{GetDistance(Core::Direction::Left)};
     float right{GetDistance(Core::Direction::Right)};
 
-    // Correct left and right in case there is no wall present
-    /*
-    if (move_direction == Core::Direction::Right)
-        left = 16.0f - 7.8f - right;
-    else
-        right = 16.0f - 7.8f - left;
-
-    float diff{left - right};
-    */
     float turning{move_direction == Core::Direction::Left ? -1.0f : 1.0f};
 
     CODAL_TIMESTAMP turn_time{now - turn_started};
@@ -253,16 +180,6 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 
         SetMotors(forward * scale, right * scale, rotation * scale);
     }
-    // Middle of turn
-    /*else if (turn_time > 200 && turn_time < 450)
-    {
-        SetMotors(0.5f, -turning * 0.1f, turning * 0.5f);
-    }
-    // Start / end of turn
-    else
-    {
-        SetMotors(turn_time > 450 ? 0.00f : 0.10f, turning * 0.1f, turning * 1.0f);
-    }*/
 }
 
 void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
@@ -423,7 +340,6 @@ void Mouse2::SetMotors(float forward, float right, float rot)
     {
         forward *= -1;
         right *= -1;
-        // rot *= -1;
     }
 
     driver->SetMotors(static_cast<int16_t>((forward - right + rot) / denominator * 4095.0f),

@@ -3,6 +3,8 @@
 namespace Firmware
 {
 
+/*! \brief PID controller
+ */
 class PID
 {
 

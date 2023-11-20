@@ -16,6 +16,8 @@
 namespace Firmware
 {
 
+/*! \brief MicroMouse related main loop, state machine with senseing and acting
+ */
 class Mouse2 : public Core::Mouse
 {
 public:

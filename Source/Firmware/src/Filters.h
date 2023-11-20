@@ -46,11 +46,14 @@ public:
     DataStream output;
 };
 
+/*! \brief Filter to get average/mean of \p T over \p SIZE
+ */
 template <typename T, size_t SIZE> class MovingAverageFilter
 {
 public:
     MovingAverageFilter() {}
 
+    //! Add \p value to the moving average
     inline void AddValue(T value)
     {
         while (queue.size() >= SIZE)
@@ -59,6 +62,7 @@ public:
         queue.push_back(value);
     }
 
+    //! Calculate the Mean of the queue
     inline T Mean()
     {
         T sum = 0.0;
@@ -68,6 +72,7 @@ public:
         return sum / queue.size();
     }
 
+    //! Assuming \p T is in degrees, get the mean of all angles
     inline T MeanDegrees()
     {
         float x{0.0};
@@ -82,6 +87,7 @@ public:
         return std::atan2(y, x) * 180.0f / std::numbers::pi;
     }
 
+    //! Add the \p value and get latest Mean
     inline T AddValueAndMean(T value)
     {
         AddValue(value);
