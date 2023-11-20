@@ -2,6 +2,8 @@
 
 #include <type_traits>
 
+#include "Inline.h"
+
 #define BITFLAGS_BEGIN(IDENT, TYPE)                                                                \
     struct IDENT                                                                                   \
     {                                                                                              \
@@ -41,7 +43,7 @@ public:                                                                         
         return *this;                                                                              \
     }                                                                                              \
     inline IDENT operator~() const noexcept { return IDENT(~value); }                              \
-    inline bool Contains(const IDENT value) const noexcept                                         \
+    inline INLINE bool Contains(const IDENT value) const noexcept                                  \
     {                                                                                              \
         return (this->value & value.value) == value.value;                                         \
     }                                                                                              \

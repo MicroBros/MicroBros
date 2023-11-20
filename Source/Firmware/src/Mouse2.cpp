@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include <Core/Log.h>
 
@@ -27,7 +28,7 @@ Mouse2::Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver)
     measurement_interval_ms = ultrasonics->GetMeasurementInterval();
 
     // Initialise WallFollower as default algorithm
-    SetAlgorithm("WallFollower");
+    SetAlgorithm("WallFollower2");
     // SetAlgorithm("FloodFill");
 
     // Make Jonathan happy and let the IR run a few cycles c:
@@ -236,18 +237,21 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     {
         // MovedTile(GetGlobalForward());
         next_algorithm_step_ms = now + turn_time;
-        next_expected_tiley_ms = now + 450;
+        next_expected_tiley_ms = now + turn_time / 2;
         state = State::MoveStraight;
+        turn_ended = now;
+        turn_iter = iter;
     }
     else
     {
+        float scale{0.8f};
         float time{std::clamp(turn_time / 800.0f, 0.0f, 1.0f)};
         // The most cursed math
         float forward{0.45f * (0.2f + 0.8f * (1.0f - time))};
         float right{turn_time > 600 ? -turning * 0.45f : turning * 0.40f * (1.0f - time)};
         float rotation{turning * (0.7f + 0.3f * (1.0f - time))};
 
-        SetMotors(forward, right, rotation);
+        SetMotors(forward * scale, right * scale, rotation * scale);
     }
     // Middle of turn
     /*else if (turn_time > 200 && turn_time < 450)
@@ -407,6 +411,7 @@ void Mouse2::Reset()
     SetMotors(0, 0, 0);
     state = State::Uninitialized;
     iter = 0; // Reset maze for MouseService
+    turn_iter = -1;
 }
 
 void Mouse2::SetMotors(float forward, float right, float rot)

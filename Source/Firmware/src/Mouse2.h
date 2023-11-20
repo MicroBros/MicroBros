@@ -70,6 +70,7 @@ private:
     CODAL_TIMESTAMP next_expected_tiley_ms;
     CODAL_TIMESTAMP next_algorithm_step_ms{std::numeric_limits<CODAL_TIMESTAMP>::max()};
     CODAL_TIMESTAMP turn_started{0};
+    CODAL_TIMESTAMP turn_ended{0};
     CODAL_TIMESTAMP stop_until{0};
 
     bool reverse_forward;
@@ -94,6 +95,7 @@ private:
     const float LENGTH_OF_MOUSE = 16;
 
     int iter = 0;
+    int turn_iter{-1};
 
     uint16_t measurement_interval_ms;
 

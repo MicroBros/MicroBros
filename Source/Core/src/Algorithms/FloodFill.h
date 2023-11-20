@@ -3,6 +3,7 @@
 #include <stack>
 
 #include "Core/Algorithm.h"
+#include "Core/Inline.h"
 #include "Core/Mouse.h"
 
 namespace Core::Algorithms
@@ -38,8 +39,9 @@ private:
     std::vector<Value> tiles;
     int width;
     int height;
+    std::stack<Coord> stack;
 
-    inline Value &GetValue(int x, int y) { return tiles[(width * y) + x]; }
+    inline INLINE Value &GetValue(int x, int y) noexcept { return tiles[(width * y) + x]; }
 };
 
 } // namespace Core::Algorithms

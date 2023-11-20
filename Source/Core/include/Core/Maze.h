@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "Bitflags.h"
+#include "Inline.h"
 
 namespace Core
 {
@@ -117,10 +118,8 @@ public:
 
     //! Reset the walls of the maze
     void ResetWalls();
-    //! Check if a tile has a wall to the side
-    bool HasWall(int x, int y, Direction direction);
     //! Get a single MazeTile at the x, y position
-    inline MazeTile &GetTile(int x, int y)
+    inline INLINE MazeTile &GetTile(int x, int y)
     {
 #ifndef FIRMWARE
         if (x >= width || x < 0)
@@ -131,12 +130,39 @@ public:
 
         return tiles[(width * y) + x];
     }
+    //! Check if a tile has a wall to the side
+    inline INLINE bool HasWall(int x, int y, Direction direction)
+    {
+
+        // Check the tile and adjecent if one of them has had a wall registered
+        switch (direction.Value())
+        {
+        case Direction::Up:
+            return y >= (height - 1) ? GetTile(x, y).Contains(MazeTile::Up)
+                                     : GetTile(x, y).Contains(MazeTile::Up) ||
+                                           GetTile(x, y + 1).Contains(MazeTile::Down);
+        case Direction::Right:
+            return x >= (width - 1) ? GetTile(x, y).Contains(MazeTile::Right)
+                                    : GetTile(x, y).Contains(MazeTile::Right) ||
+                                          GetTile(x + 1, y).Contains(MazeTile::Left);
+        case Direction::Down:
+            return y > 0 ? GetTile(x, y).Contains(MazeTile::Down) ||
+                               GetTile(x, y - 1).Contains(MazeTile::Up)
+                         : GetTile(x, y).Contains(MazeTile::Down);
+        case Direction::Left:
+            return x > 0 ? GetTile(x, y).Contains(MazeTile::Left) ||
+                               GetTile(x - 1, y).Contains(MazeTile::Right)
+                         : GetTile(x, y).Contains(MazeTile::Left);
+        default:
+            return false;
+        }
+    }
 
     //! Get the adjacent tile in a direction at offset
     MazeTile &GetTileAdjacent(int x, int y, Direction direction, int offset = 1);
 
     //! Check if the coords are within bounds
-    inline bool WithinBounds(int x, int y) noexcept
+    inline INLINE bool WithinBounds(int x, int y) noexcept
     {
         return x >= 0 && x < width && y >= 0 && y < height;
     }

@@ -84,32 +84,6 @@ void Maze::ResetWalls()
     }
 }
 
-bool Maze::HasWall(int x, int y, Direction direction)
-{
-    // Check the tile and adjecent if one of them has had a wall registered
-    switch (direction.Value())
-    {
-    case Direction::Up:
-        return y >= (height - 1) ? GetTile(x, y).Contains(MazeTile::Up)
-                                 : GetTile(x, y).Contains(MazeTile::Up) ||
-                                       GetTile(x, y + 1).Contains(MazeTile::Down);
-    case Direction::Right:
-        return x >= (width - 1) ? GetTile(x, y).Contains(MazeTile::Right)
-                                : GetTile(x, y).Contains(MazeTile::Right) ||
-                                      GetTile(x + 1, y).Contains(MazeTile::Left);
-    case Direction::Down:
-        return y > 0 ? GetTile(x, y).Contains(MazeTile::Down) ||
-                           GetTile(x, y - 1).Contains(MazeTile::Up)
-                     : GetTile(x, y).Contains(MazeTile::Down);
-    case Direction::Left:
-        return x > 0 ? GetTile(x, y).Contains(MazeTile::Left) ||
-                           GetTile(x - 1, y).Contains(MazeTile::Right)
-                     : GetTile(x, y).Contains(MazeTile::Left);
-    default:
-        return false;
-    }
-}
-
 MazeTile &Maze::GetTileAdjacent(int x, int y, Direction direction, int offset)
 {
     int next_x{x};

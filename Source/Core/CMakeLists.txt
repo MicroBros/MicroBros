@@ -1,6 +1,7 @@
 add_library(Core OBJECT
     include/Core/Bitflags.h
     include/Core/Comm.h
+    include/Core/Inline.h
 
     src/Algorithm.cpp include/Core/Algorithm.h
     src/Log.cpp include/Core/Log.h
