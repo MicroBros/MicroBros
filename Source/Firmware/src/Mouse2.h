@@ -27,6 +27,7 @@ public:
         MoveStraight,
         MoveTurn,
         Stopped,
+        StepFail
     };
 
     Mouse2(MicroBit &uBit, Drivers::DFR0548 *driver);
@@ -51,7 +52,7 @@ public:
     inline void SetRunning(bool running) noexcept
     {
         this->running = running;
-        if (running && state == State::Stopped)
+        if (running && (state == State::Stopped || state == State::StepFail))
             StepAlgorithm(uBit.timer.getTime());
     }
     //! Return if the mouse is currently finishing a move/step
@@ -79,6 +80,7 @@ private:
     CODAL_TIMESTAMP turn_started{0};
     CODAL_TIMESTAMP turn_ended{0};
     CODAL_TIMESTAMP stop_until{0};
+    CODAL_TIMESTAMP last_step{0};
 
     bool reverse_forward;
     int last_forward_heading; // Heading to last forward

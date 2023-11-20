@@ -79,6 +79,14 @@ void Mouse2::Run(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
     case State::Stopped:
         driver->StopMotors();
         break;
+    case State::StepFail:
+        driver->StopMotors();
+
+        // Let the ultrasonic cycle
+        if (now - last_step > 120)
+            StepAlgorithm(now);
+
+        break;
     default:
         driver->StopMotors();
         LOG_ERROR("INVALID STATE");
@@ -191,6 +199,7 @@ void Mouse2::MoveTurn(CODAL_TIMESTAMP now, CODAL_TIMESTAMP dt)
 
 void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
 {
+    last_step = now;
     // Get distances to sides
     float front{GetDistance(Core::Direction::Forward)};
     float left{GetDistance(Core::Direction::Left)};
@@ -230,7 +239,7 @@ void Mouse2::StepAlgorithm(CODAL_TIMESTAMP now)
     if (!move_direction_opt.has_value())
     {
         LOG_ERROR("No move direction found my algorithm, stopping!");
-        state = State::Stopped;
+        state = State::StepFail;
         return;
     }
 
