@@ -35,7 +35,9 @@ int main()
     LOG_INFO("Initialised MicroMouse!");
 
     // Used for button A toggle
-    bool last_pressed{false};
+    bool last_pressed_a{false};
+    // Used for button B toggle
+    bool last_pressed_b{false};
 
     CODAL_TIMESTAMP prev_time{uBit.timer.getTime()};
     while (1)
@@ -52,13 +54,22 @@ int main()
         mouse_service->Update();
 #endif
         // Simple toggle of running by pressing A
-        if (!last_pressed && uBit.buttonA.isPressed())
+        if (!last_pressed_a && uBit.buttonA.isPressed())
         {
             mouse->SetRunning(!mouse->IsRunning());
-            last_pressed = true;
+            last_pressed_a = true;
         }
         else
-            last_pressed = false;
+            last_pressed_a = false;
+
+        if (!last_pressed_b && uBit.buttonB.isPressed())
+        {
+            mouse->SetAlgorithm("FloodFill");
+            mouse->Reset();
+            last_pressed_b = true;
+        }
+        else
+            last_pressed_b = false;
     }
 
     return 0;
